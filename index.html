@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fight Club — You Met Me at a Very Strange Time in My Life</title>
+  <meta name="description" content="An interactive Fight Club fan page featuring the Narrator and Tyler Durden with dynamic smoke effects and character highlights.">
+  <style>
+    /* ─── RESET & BASE ─── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #000;
+      cursor: crosshair;
+    }
+
+    /* ─── SCENE CONTAINER ─── */
+    #scene {
+      position: relative;
+      width: 100vw;
+      height: 56.25vw;            /* 768/1366 ≈ 0.5625  → maintains backdrop aspect */
+      max-height: 100vh;
+      max-width: 177.78vh;        /* inverse: 1366/768 ≈ 1.7778 */
+      margin: auto;
+      overflow: hidden;
+      /* center vertically when letterboxed */
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* ─── BACKDROP ─── */
+    #backdrop {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      z-index: 1;
+    }
+
+    /* ─── CHARACTER OVERLAYS ─── */
+    .character-overlay {
+      position: absolute;
+      z-index: 3;
+      pointer-events: none;       /* let mouse events go through to the scene */
+      transition: filter 0.6s ease, opacity 0.6s ease;
+      will-change: filter, opacity;
+      image-rendering: auto;
+    }
+
+    /* Narrator — left character (Edward Norton) */
+    #narrator-overlay {
+      /* ALIGNMENT CONSTANTS — tweak these */
+      /* width as % of scene */
+      width: var(--narrator-width);
+      left: var(--narrator-left);
+      top: var(--narrator-top);
+    }
+
+    /* Tyler Durden — right character (magenta silhouette) */
+    #tyler-overlay {
+      width: var(--tyler-width);
+      left: var(--tyler-left);
+      top: var(--tyler-top);
+    }
+
+    .character-overlay img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* ─── HIGHLIGHT / DIM STATES ─── */
+    .character-overlay.active {
+      filter: brightness(1.25) drop-shadow(0 0 25px rgba(255,255,255,0.3))
+              drop-shadow(0 0 60px rgba(255,200,120,0.15));
+      opacity: 1;
+    }
+    .character-overlay.dimmed {
+      filter: brightness(0.3) saturate(0.5);
+      opacity: 0.7;
+    }
+    .character-overlay.neutral {
+      filter: brightness(1);
+      opacity: 1;
+    }
+
+    /* ─── SMOKE CANVAS ─── */
+    #smoke-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    /* ─── VIGNETTE OVERLAY ─── */
+    #vignette {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 5;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.65) 100%);
+    }
+
+    /* ─── TEXT ZONES (reserved for later) ─── */
+    #text-left, #text-right {
+      position: absolute;
+      top: 0; bottom: 0;
+      z-index: 6;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      /* placeholder — content added later */
+    }
+    #text-left  { left: 2%;  width: 18%; justify-content: flex-start; }
+    #text-right { right: 2%; width: 18%; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+
+<div id="scene">
+  <!-- Backdrop -->
+  <img id="backdrop" src="Untitled%20design(1).png" alt="Fight Club scene — Narrator and Tyler Durden">
+
+  <!-- Character overlays -->
+  <div id="narrator-overlay" class="character-overlay neutral">
+    <img src="references/reference-removebg-preview.png" alt="The Narrator">
+  </div>
+  <div id="tyler-overlay" class="character-overlay neutral">
+    <img src="references/1786828814-removebg-preview.png" alt="Tyler Durden">
+  </div>
+
+  <!-- Smoke particles -->
+  <canvas id="smoke-canvas"></canvas>
+
+  <!-- Vignette -->
+  <div id="vignette"></div>
+
+  <!-- Reserved text zones -->
+  <div id="text-left"></div>
+  <div id="text-right"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   FIGHT CLUB — INTERACTIVE FAN PAGE
+   All tweakable alignment & behaviour constants are below.
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ─── ALIGNMENT CONSTANTS (% of scene dimensions) ───────────────
+// Narrator (Edward Norton, left) — full-canvas Canva export, align 1:1 with backdrop
+const NARRATOR_WIDTH  = 100;     // % of scene width (full canvas)
+const NARRATOR_LEFT   = 0;       // % from left edge
+const NARRATOR_TOP    = 0;       // % from top edge
+
+// Tyler Durden (magenta silhouette, right) — full-canvas Canva export
+const TYLER_WIDTH     = 100;     // % of scene width (full canvas)
+const TYLER_LEFT      = 0;       // % from left edge
+const TYLER_TOP       = 0;       // % from top edge
+
+// ─── CIGARETTE TIP POSITIONS (% of scene) ─────────────────────
+// Where the smoke should originate for each character
+const NARRATOR_CIG_X  = 28.5;   // % from left
+const NARRATOR_CIG_Y  = 73.0;   // % from top
+
+const TYLER_CIG_X     = 66.5;   // % from left
+const TYLER_CIG_Y     = 46.0;   // % from top
+
+// ─── HOVER BOUNDARY ───────────────────────────────────────────
+// X-position (%) that divides narrator zone from tyler zone
+const HOVER_BOUNDARY   = 50;
+
+// ─── SMOKE CONFIGURATION ──────────────────────────────────────
+const SMOKE_SPAWN_RATE     = 3;       // particles per frame
+const SMOKE_PARTICLE_LIFE  = 120;     // frames
+const SMOKE_RISE_SPEED     = 0.8;     // base upward speed (px/frame at native res)
+const SMOKE_DRIFT_AMP      = 0.4;     // horizontal drift amplitude
+const SMOKE_DRIFT_FREQ     = 0.02;    // drift oscillation frequency
+const SMOKE_START_SIZE     = 3;       // initial radius (px at native res)
+const SMOKE_END_SIZE       = 18;      // max radius
+const SMOKE_START_ALPHA    = 0.35;    // starting opacity
+const SMOKE_COLOR          = '200, 200, 210';  // RGB for smoke tint
+const MAX_PARTICLES        = 400;
+
+// ─── CROSSFADE TIMING ─────────────────────────────────────────
+const CROSSFADE_MS = 600;             // matches CSS transition
+
+// ═══════════════════════════════════════════════════════════════
+//  APPLY ALIGNMENT CSS VARS
+// ═══════════════════════════════════════════════════════════════
+const scene = document.getElementById('scene');
+scene.style.setProperty('--narrator-width', NARRATOR_WIDTH + '%');
+scene.style.setProperty('--narrator-left',  NARRATOR_LEFT + '%');
+scene.style.setProperty('--narrator-top',   NARRATOR_TOP + '%');
+scene.style.setProperty('--tyler-width',    TYLER_WIDTH + '%');
+scene.style.setProperty('--tyler-left',     TYLER_LEFT + '%');
+scene.style.setProperty('--tyler-top',      TYLER_TOP + '%');
+
+// ═══════════════════════════════════════════════════════════════
+//  HOVER DETECTION & HIGHLIGHT/DIM
+// ═══════════════════════════════════════════════════════════════
+const narratorEl = document.getElementById('narrator-overlay');
+const tylerEl    = document.getElementById('tyler-overlay');
+
+let activeChar = null;   // 'narrator' | 'tyler' | null
+
+function setActiveCharacter(who) {
+  if (who === activeChar) return;
+  activeChar = who;
+
+  if (who === 'narrator') {
+    narratorEl.className = 'character-overlay active';
+    tylerEl.className    = 'character-overlay dimmed';
+  } else if (who === 'tyler') {
+    narratorEl.className = 'character-overlay dimmed';
+    tylerEl.className    = 'character-overlay active';
+  } else {
+    narratorEl.className = 'character-overlay neutral';
+    tylerEl.className    = 'character-overlay neutral';
+  }
+}
+
+scene.addEventListener('mousemove', (e) => {
+  const rect = scene.getBoundingClientRect();
+  const xPct = ((e.clientX - rect.left) / rect.width) * 100;
+  if (xPct < HOVER_BOUNDARY) {
+    setActiveCharacter('narrator');
+  } else {
+    setActiveCharacter('tyler');
+  }
+});
+
+scene.addEventListener('mouseleave', () => {
+  setActiveCharacter(null);
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  SMOKE PARTICLE SYSTEM (Canvas)
+// ═══════════════════════════════════════════════════════════════
+const canvas = document.getElementById('smoke-canvas');
+const ctx    = canvas.getContext('2d');
+
+let particles = [];
+let animFrame  = 0;
+
+function resizeCanvas() {
+  const rect = scene.getBoundingClientRect();
+  canvas.width  = rect.width  * window.devicePixelRatio;
+  canvas.height = rect.height * window.devicePixelRatio;
+  ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+class SmokeParticle {
+  constructor(x, y, sceneW, sceneH) {
+    // Scale factors relative to a 1366-wide reference
+    const s = sceneW / 1366;
+    this.x = x;
+    this.y = y;
+    this.age = 0;
+    this.life = SMOKE_PARTICLE_LIFE + (Math.random() - 0.5) * 40;
+    this.riseSpeed = (SMOKE_RISE_SPEED + Math.random() * 0.4) * s;
+    this.driftPhase = Math.random() * Math.PI * 2;
+    this.driftAmp = (SMOKE_DRIFT_AMP + Math.random() * 0.3) * s;
+    this.startSize = (SMOKE_START_SIZE + Math.random() * 2) * s;
+    this.endSize = (SMOKE_END_SIZE + Math.random() * 8) * s;
+    this.alpha = SMOKE_START_ALPHA * (0.7 + Math.random() * 0.3);
+    this.rotation = Math.random() * Math.PI * 2;
+    this.rotSpeed = (Math.random() - 0.5) * 0.02;
+  }
+
+  update() {
+    this.age++;
+    const t = this.age / this.life;
+    // Rise — accelerates slightly as smoke gets lighter
+    this.y -= this.riseSpeed * (1 + t * 0.5);
+    // Organic drift
+    this.x += Math.sin(this.driftPhase + this.age * SMOKE_DRIFT_FREQ) * this.driftAmp;
+    // Gentle random turbulence
+    this.x += (Math.random() - 0.5) * 0.3;
+    this.rotation += this.rotSpeed;
+    return this.age < this.life;
+  }
+
+  draw(ctx) {
+    const t = this.age / this.life;
+    // Size grows as smoke rises
+    const r = this.startSize + (this.endSize - this.startSize) * Math.pow(t, 0.5);
+    // Alpha fades out — peak at ~20%, then fade
+    let alpha;
+    if (t < 0.15) {
+      alpha = this.alpha * (t / 0.15);
+    } else {
+      alpha = this.alpha * (1 - Math.pow((t - 0.15) / 0.85, 1.5));
+    }
+    if (alpha <= 0.001) return;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rotation);
+    ctx.globalAlpha = alpha;
+    ctx.globalCompositeOperation = 'screen';
+
+    // Soft radial gradient puff
+    const grad = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+    grad.addColorStop(0, `rgba(${SMOKE_COLOR}, 0.6)`);
+    grad.addColorStop(0.4, `rgba(${SMOKE_COLOR}, 0.25)`);
+    grad.addColorStop(1, `rgba(${SMOKE_COLOR}, 0)`);
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function getSmokeSrc() {
+  const rect = scene.getBoundingClientRect();
+  const w = rect.width;
+  const h = rect.height;
+
+  if (activeChar === 'narrator') {
+    return { x: (NARRATOR_CIG_X / 100) * w, y: (NARRATOR_CIG_Y / 100) * h };
+  } else if (activeChar === 'tyler') {
+    return { x: (TYLER_CIG_X / 100) * w, y: (TYLER_CIG_Y / 100) * h };
+  }
+  return null;
+}
+
+function animate() {
+  const rect = scene.getBoundingClientRect();
+  const w = rect.width;
+  const h = rect.height;
+
+  ctx.clearRect(0, 0, w, h);
+  animFrame++;
+
+  // Spawn new particles
+  const src = getSmokeSrc();
+  if (src && particles.length < MAX_PARTICLES) {
+    for (let i = 0; i < SMOKE_SPAWN_RATE; i++) {
+      const jx = (Math.random() - 0.5) * 4 * (w / 1366);
+      const jy = (Math.random() - 0.5) * 3 * (w / 1366);
+      particles.push(new SmokeParticle(src.x + jx, src.y + jy, w, h));
+    }
+  }
+
+  // Update & draw
+  particles = particles.filter(p => {
+    const alive = p.update();
+    if (alive) p.draw(ctx);
+    return alive;
+  });
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>

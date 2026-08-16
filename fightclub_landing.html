@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fight Club</title>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'FightThis';
+      src: url('FightThis.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #050505;
+    }
+
+    body { cursor: none; }
+
+    #scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* ── Both layers use the same image with CSS masks for independent filtering ── */
+    .layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      will-change: filter;
+      transition: filter 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Narrator layer — masks to left side, fades soft into center */
+    #narrator-layer {
+      z-index: 1;
+      -webkit-mask-image: linear-gradient(to right,
+        black 0%,
+        black 36%,
+        rgba(0,0,0,0.80) 46%,
+        rgba(0,0,0,0.30) 56%,
+        transparent 68%
+      );
+      mask-image: linear-gradient(to right,
+        black 0%,
+        black 36%,
+        rgba(0,0,0,0.80) 46%,
+        rgba(0,0,0,0.30) 56%,
+        transparent 68%
+      );
+      filter: brightness(1.08) saturate(1.05) contrast(1.04);
+    }
+
+    /* Tyler layer — masks to right side, fades soft into center */
+    #tyler-layer {
+      z-index: 2;
+      -webkit-mask-image: linear-gradient(to left,
+        black 0%,
+        black 33%,
+        rgba(0,0,0,0.85) 43%,
+        rgba(0,0,0,0.25) 55%,
+        transparent 67%
+      );
+      mask-image: linear-gradient(to left,
+        black 0%,
+        black 33%,
+        rgba(0,0,0,0.85) 43%,
+        rgba(0,0,0,0.25) 55%,
+        transparent 67%
+      );
+      filter: brightness(0.18) saturate(0.08) contrast(0.88);
+    }
+
+    /* ── Center title ── */
+    #title {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(40px, 6vw, 120px);
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.88);
+      text-align: center;
+    }
+
+    /* ── Cinematic vignette ── */
+    #vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 90% 65% at 50% 50%, transparent 0%, rgba(0,0,0,0.45) 100%),
+        linear-gradient(to bottom,
+          rgba(0,0,0,0.50) 0%,
+          transparent 18%,
+          transparent 72%,
+          rgba(0,0,0,0.80) 100%
+        );
+    }
+
+    /* ── Bottom-left tagline ── */
+    #tagline {
+      position: absolute;
+      left: 3vw;
+      bottom: 2.5vh;
+      z-index: 8;
+      pointer-events: none;
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(18px, 2.2vw, 38px);
+      letter-spacing: 0.14em;
+      color: rgba(255,255,255,0.55);
+      text-align: left;
+    }
+
+    /* ── Bottom-right headline ── */
+    #headline {
+      position: absolute;
+      right: 3vw;
+      bottom: 2.5vh;
+      z-index: 8;
+      pointer-events: none;
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(18px, 2.2vw, 38px);
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.70);
+      text-align: right;
+    }
+
+    /* ── Warning modal ── */
+    #modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.82);
+      cursor: none;
+    }
+    #modal.show { display: flex; }
+    #modal .warning {
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(20px, 3vw, 52px);
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.85);
+      text-align: center;
+      padding: 0 4vw;
+    }
+    #modal .actions {
+      margin-top: 4vh;
+      display: flex;
+      gap: 2vw;
+      justify-content: center;
+    }
+    #modal button {
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(16px, 1.6vw, 28px);
+      letter-spacing: 0.12em;
+      padding: 0.5em 1.6em;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.40);
+      color: rgba(255,255,255,0.80);
+      cursor: none;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    #modal button:hover {
+      background: rgba(255,255,255,0.85);
+      color: #000;
+    }
+
+    /* ── Custom cursor ── */
+    #dot {
+      position: fixed;
+      width: 6px; height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+    }
+  </style>
+</head>
+<body>
+
+<div id="scene" class="narrator-on">
+
+  <!-- Two copies of the same image, each masked to its character's side -->
+  <img id="narrator-layer" class="layer" src="references/Final.png" alt="">
+  <img id="tyler-layer"    class="layer" src="references/Final.png" alt="">
+
+  <div id="vignette"></div>
+
+  <div id="title">Hustle<br>club</div>
+
+  <div id="headline">Live the same fucking life</div>
+  <div id="tagline">Fuck yourself for a dream life</div>
+
+</div>
+
+<div id="dot"></div>
+
+<div id="modal">
+  <div class="warning">Are you strong enough to embrace pain ?</div>
+  <div class="actions">
+    <button id="btn-yeah">Yeah</button>
+    <button id="btn-nope">Nope</button>
+  </div>
+</div><script>
+// ─────────────────────────────────────────────────────────────
+const narLayer   = document.getElementById('narrator-layer');
+const tylLayer   = document.getElementById('tyler-layer');
+const taglineEl  = document.getElementById('tagline');
+const headlineEl = document.getElementById('headline');
+const sceneEl    = document.getElementById('scene');
+const dotEl      = document.getElementById('dot');
+const modalEl    = document.getElementById('modal');
+
+// ─────────────────────────────────────────────────────────────
+let active = 'narrator';
+let blurred = false;
+let mx = window.innerWidth * 0.25, my = window.innerHeight * 0.6;
+
+const FILTERS = {
+  narrator: 'brightness(1.08) saturate(1.05) contrast(1.04)',
+  tyler: 'brightness(1.28) saturate(1.12) contrast(1.08)',
+  off: 'brightness(0.18) saturate(0.08) contrast(0.88)',
+};
+
+function applyFilters() {
+  const b = blurred ? 'blur(8px) ' : '';
+  narLayer.style.filter = b + (active === 'narrator' ? FILTERS.narrator : FILTERS.off);
+  tylLayer.style.filter = b + (active === 'tyler' ? FILTERS.tyler : FILTERS.off);
+  taglineEl.style.filter = b;
+  headlineEl.style.filter = b;
+}
+
+// ─────────────────────────────────────────────────────────────
+// CHARACTER SWITCH
+// ─────────────────────────────────────────────────────────────
+function switchTo(char) {
+  if (active === char) return;
+  active = char;
+
+  if (char === 'narrator') sceneEl.className = 'narrator-on';
+  else sceneEl.className = 'tyler-on';
+  applyFilters();
+}
+
+// ─────────────────────────────────────────────────────────────
+// MOUSE
+// ─────────────────────────────────────────────────────────────
+const DEAD = 48;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX;
+  my = e.clientY;
+  dotEl.style.left = mx + 'px';
+  dotEl.style.top  = my + 'px';
+
+  const mid = window.innerWidth / 2;
+  if      (e.clientX < mid - DEAD) switchTo('narrator');
+  else if (e.clientX > mid + DEAD) switchTo('tyler');
+});
+
+// ─────────────────────────────────────────────────────────────
+// WARNING MODALS — left half asks strong, right half asks weak
+// ─────────────────────────────────────────────────────────────
+const modalQ   = modalEl.querySelector('.warning');
+const btnYeah  = document.getElementById('btn-yeah');
+const btnNope  = document.getElementById('btn-nope');
+
+const QUESTIONS = {
+  strong: { text: 'Are you strong enough to embrace pain ?', page: 'strong_people.html' },
+  weak:   { text: 'Are you weak enough to die ?',           page: 'weak_people.html' },
+};
+
+function openModal(kind) {
+  modalQ.textContent = QUESTIONS[kind].text;
+  modalEl.dataset.kind = kind;
+  modalEl.classList.add('show');
+  blurred = true;
+  applyFilters();
+}
+
+document.addEventListener('click', e => {
+  const mid = window.innerWidth / 2;
+  openModal(e.clientX < mid ? 'strong' : 'weak');
+});
+
+btnYeah.addEventListener('click', e => {
+  e.stopPropagation();
+  window.location.href = QUESTIONS[modalEl.dataset.kind].page;
+});
+
+btnNope.addEventListener('click', e => {
+  e.stopPropagation();
+  modalEl.classList.remove('show');
+  blurred = false;
+  applyFilters();
+});
+</script>
+</body>
+</html>

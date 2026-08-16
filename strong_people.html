@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Core information</title>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'FightThis';
+      src: url('FightThis.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'SailorMoon';
+      src: url('WishMF.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+      background: #050505;
+    }
+    #scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #title {
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(28px, 5vw, 90px);
+      letter-spacing: 0.14em;
+      color: rgba(255,255,255,0.85);
+      text-align: center;
+      padding: 0 4vw;
+    }
+    #about {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 10vh 6vw 15vh;
+      color: rgba(255,255,255,0.85);
+      font-family: 'Anton', sans-serif;
+    }
+    #about section {
+      margin-bottom: 8vh;
+    }
+    #about h2 {
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(22px, 3vw, 44px);
+      letter-spacing: 0.12em;
+      margin-bottom: 1.5vh;
+      color: rgba(255,255,255,0.95);
+    }
+    #about p, #about li {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(14px, 1.6vw, 22px);
+      letter-spacing: 0.06em;
+      line-height: 1.7;
+      margin-bottom: 0.8em;
+    }
+    #about ul { list-style: none; }
+    #about ul li::before { content: "— "; color: rgba(255,255,255,0.5); }
+    #newsletter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1em;
+    }
+    #newsletter input {
+      flex: 1 1 260px;
+      font-family: inherit;
+      font-size: clamp(14px, 1.5vw, 20px);
+      letter-spacing: 0.08em;
+      padding: 0.5em 1em;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.40);
+      color: rgba(255,255,255,0.85);
+      outline: none;
+    }
+    #newsletter button {
+      font-family: inherit;
+      font-size: clamp(14px, 1.5vw, 20px);
+      letter-spacing: 0.12em;
+      padding: 0.5em 1.6em;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.40);
+      color: rgba(255,255,255,0.80);
+      cursor: pointer;
+    }
+    #newsletter button:hover {
+      background: rgba(255,255,255,0.85);
+      color: #000;
+    }
+    #back {
+      position: absolute;
+      left: 3vw;
+      top: 3vh;
+      z-index: 8;
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(14px, 1.4vw, 24px);
+      letter-spacing: 0.12em;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.40);
+      color: rgba(255,255,255,0.70);
+      padding: 0.4em 1.2em;
+      cursor: pointer;
+    }
+    #back:hover {
+      background: rgba(255,255,255,0.85);
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+<div id="scene">
+  <div id="title">Core information</div>
+  <button id="back">Back to landing</button>
+</div>
+<main id="about">
+  <section>
+    <h2>Why we exist</h2>
+    <p>We exist because comfort is a slow death. Most people fade quietly; we choose to burn. This club is for the ones who refuse to settle, who would rather bleed for something real than coast through a borrowed life.</p>
+  </section>
+  <section>
+    <h2>How our club functions</h2>
+    <p>No hierarchy, no titles, no mercy. We meet, we push each other past the point we'd stop at alone, and we hold everyone accountable. Rules are simple: show up, go hard, never lie to yourself.</p>
+  </section>
+  <section>
+    <h2>Members</h2>
+    <ul>
+      <li>Nobody joins by asking. You earn a spot by proving you mean it.</li>
+      <li>Every member is a fighter, a builder, or both.</li>
+      <li>Weak excuses get you out faster than any bouncer could.</li>
+    </ul>
+  </section>
+  <section>
+    <h2>Projects</h2>
+    <p>We build in the open. Training regimes, creative work, and real ventures born from this room. Each project is a middle finger to average, and every one of them is shown right here as it takes shape.</p>
+  </section>
+  <section>
+    <h2>Join the newsletter</h2>
+    <p>Get the word before anyone else. No spam, no noise, just the next move.</p>
+    <form id="newsletter">
+      <input type="email" placeholder="Your email" required>
+      <button type="submit">Join</button>
+    </form>
+  </section>
+</main>
+<script>
+document.getElementById('newsletter').addEventListener('submit', e => e.preventDefault());
+</script>
+<script>
+document.getElementById('back').addEventListener('click', () => {
+  window.location.href = 'fightclub_landing.html';
+});
+</script>
+</body>
+</html>

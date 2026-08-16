@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weak People</title>
+  <style>
+    @font-face {
+      font-family: 'FightThis';
+      src: url('FightThis.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #050505;
+    }
+    #scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      filter: blur(10px);
+    }
+    #title {
+      z-index: 3;
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(28px, 5vw, 90px);
+      letter-spacing: 0.14em;
+      color: rgba(255,255,255,0.9);
+      text-align: center;
+      padding: 0.6em 1.2em;
+      border: 2px solid rgba(255,255,255,0.5);
+      background: rgba(0,0,0,0.4);
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+    }
+    #back {
+      position: absolute;
+      left: 3vw;
+      top: 3vh;
+      z-index: 8;
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(14px, 1.4vw, 24px);
+      letter-spacing: 0.12em;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.40);
+      color: rgba(255,255,255,0.70);
+      padding: 0.4em 1.2em;
+      cursor: pointer;
+    }
+    #back:hover {
+      background: rgba(255,255,255,0.85);
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+<div id="scene">
+  <img class="layer" src="references/princes.png" alt="">
+  <div id="title">Sorry, This World is not for you princess</div>
+  <button id="back">Back to landing</button>
+</div>
+<script>
+document.getElementById('back').addEventListener('click', () => {
+  window.location.href = 'fightclub_landing.html';
+});
+</script>
+</body>
+</html>

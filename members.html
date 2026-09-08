@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members</title>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'FightThis';
+      src: url('FightThis.ttf') format('truetype');
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; background: #050505; color: rgba(255,255,255,0.85); }
+    body { font-family: 'Anton', sans-serif; }
+    #back {
+      position: fixed;
+      left: 3vw;
+      top: 3vh;
+      z-index: 10;
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(14px, 1.4vw, 22px);
+      letter-spacing: 0.12em;
+      background: #fff;
+      border: 1px solid #fff;
+      color: #000;
+      padding: 0.4em 1.2em;
+      cursor: pointer;
+      overflow: hidden;
+      isolation: isolate;
+      --x: 50%; --y: 50%;
+      transform: translateZ(0);
+      transition: border-color 0.35s ease;
+    }
+    #back::before {
+      content: "";
+      position: absolute;
+      width: 300%;
+      aspect-ratio: 1;
+      left: var(--x);
+      top: var(--y);
+      background: #c00000;
+      border-radius: 50%;
+      z-index: -1;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 2.70s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+      pointer-events: none;
+    }
+    #back:hover::before {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #back:hover {
+      border-color: #c00000;
+      color: #000;
+    }
+    #mobile-block { display:none; position:fixed; inset:0; z-index:99999; align-items:center; justify-content:center; overflow:hidden; background:#050505; }
+    #mobile-block img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:blur(14px) brightness(0.55); transform:scale(1.06); }
+    #mobile-block p { position:relative; z-index:1; font-family:'FightThis','Arial Narrow',sans-serif; font-size:clamp(28px,7vw,56px); letter-spacing:0.12em; color:rgba(255,255,255,0.92); text-align:center; padding:0 6vw; line-height:1.2; text-shadow:0 2px 20px rgba(0,0,0,0.9); }
+    @media (max-width:768px) { #mobile-block { display:flex; } }
+    header {
+      text-align: center;
+      padding: 14vh 6vw 6vh;
+    }
+    header h1 {
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(32px, 6vw, 90px);
+      letter-spacing: 0.14em;
+      color: rgba(255,255,255,0.95);
+    }
+    header p {
+      margin-top: 2vh;
+      font-size: clamp(14px, 1.5vw, 18px);
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.55);
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+    #grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 4vh 6vw 10vh;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2.5vw;
+    }
+    .card {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      padding: 2.5em 1.8em;
+      text-align: center;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .card:hover {
+      border-color: rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.07);
+    }
+    .card .num {
+      font-family: 'FightThis', sans-serif;
+      font-size: 14px;
+      letter-spacing: 0.2em;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 1.2em;
+    }
+    .card h2 {
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(20px, 2vw, 28px);
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.92);
+      margin-bottom: 0.6em;
+    }
+    .card p {
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.55);
+    }
+  </style>
+</head>
+<body>
+  <button id="back">Back</button>
+  <header>
+    <h1>Members</h1>
+    <p>Nobody joins by asking. You earn a spot by proving you mean it. Every member is a fighter, a builder, or both.</p>
+  </header>
+  <main id="grid">
+    <div class="card">
+      <div class="num">01</div>
+      <h2>Tyler</h2>
+      <p>The idea. Burns bright, talks louder, never asks permission.</p>
+    </div>
+    <div class="card">
+      <div class="num">02</div>
+      <h2>The Narrator</h2>
+      <p>Woke up. Stopped sleeping. Started building something real.</p>
+    </div>
+    <div class="card">
+      <div class="num">03</div>
+      <h2>The Fighter</h2>
+      <p>Shows up, goes hard, holds the line when others fade.</p>
+    </div>
+    <div class="card">
+      <div class="num">04</div>
+      <h2>The Builder</h2>
+      <p>Makes things that outlast talk. Hands dirty, work speaks.</p>
+    </div>
+    <div class="card">
+      <div class="num">05</div>
+      <h2>The Keeper</h2>
+      <p>Keeps the rules. No hierarchy, no titles, just accountability.</p>
+    </div>
+    <div class="card">
+      <div class="num">06</div>
+      <h2>You — ?</h2>
+      <p>Earn it. Prove you mean it. Weak excuses get you out faster than any bouncer could.</p>
+    </div>
+  </main>
+<script>
+const backBtn = document.getElementById('back');
+backBtn.addEventListener('click', () => {
+  window.location.href = 'strong_people.html';
+});
+let raf;
+backBtn.addEventListener('mousemove', e => {
+  if (raf) return;
+  raf = requestAnimationFrame(() => {
+    const r = backBtn.getBoundingClientRect();
+    backBtn.style.setProperty('--x', ((e.clientX - r.left)/r.width*100)+'%');
+    backBtn.style.setProperty('--y', ((e.clientY - r.top)/r.height*100)+'%');
+    raf = null;
+  });
+}, {passive: true});
+</script>
+<div id="mobile-block" aria-hidden="true"><img src="images/instead.jpg" alt=""><p>Instead use your laptop, Noob!</p></div></body>
+</html>

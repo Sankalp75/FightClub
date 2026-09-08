@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join</title>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'FightThis';
+      src: url('FightThis.ttf') format('truetype');
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; background: #050505; color: rgba(255,255,255,0.85); }
+    body { font-family: 'Anton', sans-serif; }
+    #back {
+      position: fixed;
+      left: 3vw;
+      top: 3vh;
+      z-index: 10;
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(14px, 1.4vw, 22px);
+      letter-spacing: 0.12em;
+      background: #fff;
+      border: 1px solid #fff;
+      color: #000;
+      padding: 0.4em 1.2em;
+      cursor: pointer;
+      overflow: hidden;
+      isolation: isolate;
+      --x: 50%; --y: 50%;
+      transform: translateZ(0);
+      transition: border-color 0.35s ease;
+    }
+    #back::before {
+      content: "";
+      position: absolute;
+      width: 300%;
+      aspect-ratio: 1;
+      left: var(--x);
+      top: var(--y);
+      background: #c00000;
+      border-radius: 50%;
+      z-index: -1;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 2.70s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+      pointer-events: none;
+    }
+    #back:hover::before { transform: translate(-50%, -50%) scale(1); }
+    #back:hover { border-color: #c00000; color: #000; }
+    #mobile-block { display:none; position:fixed; inset:0; z-index:99999; align-items:center; justify-content:center; overflow:hidden; background:#050505; }
+    #mobile-block img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:blur(14px) brightness(0.55); transform:scale(1.06); }
+    #mobile-block p { position:relative; z-index:1; font-family:'FightThis','Arial Narrow',sans-serif; font-size:clamp(28px,7vw,56px); letter-spacing:0.12em; color:rgba(255,255,255,0.92); text-align:center; padding:0 6vw; line-height:1.2; text-shadow:0 2px 20px rgba(0,0,0,0.9); }
+    @media (max-width:768px) { #mobile-block { display:flex; } }
+    header { text-align: center; padding: 14vh 6vw 6vh; }
+    header h1 {
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(32px, 6vw, 90px);
+      letter-spacing: 0.14em;
+      color: rgba(255,255,255,0.95);
+    }
+    header p {
+      margin-top: 2vh;
+      font-size: clamp(14px, 1.5vw, 18px);
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.55);
+      max-width: 650px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+    #form-wrap {
+      max-width: 560px;
+      margin: 6vh auto 12vh;
+      padding: 0 6vw;
+    }
+    #form-wrap h2 {
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(20px, 3vw, 36px);
+      letter-spacing: 0.1em;
+      text-align: center;
+      margin-bottom: 3vh;
+      color: rgba(255,255,255,0.95);
+    }
+    #join-form label {
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.14em;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: -0.6em;
+    }
+    #join-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2em;
+    }
+    #join-form input, #join-form textarea {
+      font-family: 'Anton', sans-serif;
+      font-size: 15px;
+      letter-spacing: 0.06em;
+      padding: 0.9em 1em;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.9);
+      outline: none;
+    }
+    #join-form input:focus, #join-form textarea:focus { border-color: rgba(255,255,255,0.35); }
+    #join-form textarea { resize: none; min-height: unset; height: 46px; overflow: hidden; white-space: nowrap; }
+    #join-form button {
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: clamp(16px, 1.8vw, 22px);
+      letter-spacing: 0.15em;
+      padding: 0.8em 1.2em;
+      background: #fff;
+      border: 1px solid #fff;
+      color: #000;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      --x: 50%; --y: 50%;
+      transform: translateZ(0);
+      transition: border-color 0.35s ease;
+    }
+    #join-form button::before {
+      content: "";
+      position: absolute;
+      width: 300%;
+      aspect-ratio: 1;
+      left: var(--x);
+      top: var(--y);
+      background: #c00000;
+      border-radius: 50%;
+      z-index: -1;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 2.70s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+      pointer-events: none;
+    }
+    #join-form button:hover::before { transform: translate(-50%, -50%) scale(1); }
+    #join-form button:hover { border-color: #c00000; color: #000; }
+  </style>
+</head>
+<body>
+  <button id="back">Back</button>
+  <header>
+    <h1>Join</h1>
+    <p>No applications. You show up, you prove it. Fill this — not to be chosen, but to be seen. Weak answers get ignored.</p>
+  </header>
+  <main id="form-wrap">
+    <h2>Step in</h2>
+    <form id="join-form">
+      <label for="alter-ego">Alter Ego</label>
+      <input id="alter-ego" type="text" placeholder="Tyler Durden" required>
+      <label for="contact">Contact</label>
+      <input id="contact" type="email" placeholder="tyler.durden@soap.com" required>
+      <label for="dialogue">State Your Dialogue</label>
+      <textarea id="dialogue" placeholder="I don't want to die without any scars." required></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </main>
+<script>
+const backBtn = document.getElementById('back');
+backBtn.addEventListener('click', () => {
+  window.location.href = 'strong_people.html';
+});
+let raf;
+backBtn.addEventListener('mousemove', e => {
+  if (raf) return;
+  raf = requestAnimationFrame(() => {
+    const r = backBtn.getBoundingClientRect();
+    backBtn.style.setProperty('--x', ((e.clientX - r.left)/r.width*100)+'%');
+    backBtn.style.setProperty('--y', ((e.clientY - r.top)/r.height*100)+'%');
+    raf = null;
+  });
+}, {passive: true});
+const joinBtn = document.querySelector('#join-form button');
+if (joinBtn) {
+  let jraf;
+  joinBtn.addEventListener('mousemove', e => {
+    if (jraf) return;
+    jraf = requestAnimationFrame(() => {
+      const r = joinBtn.getBoundingClientRect();
+      joinBtn.style.setProperty('--x', ((e.clientX - r.left)/r.width*100)+'%');
+      joinBtn.style.setProperty('--y', ((e.clientY - r.top)/r.height*100)+'%');
+      jraf = null;
+    });
+  }, {passive: true});
+}
+document.getElementById('join-form').addEventListener('submit', e => { e.preventDefault(); e.target.reset(); alert('Seen. We will find you if you mean it.'); });
+</script>
+<div id="mobile-block" aria-hidden="true"><img src="images/instead.jpg" alt=""><p>Instead use your laptop, Noob!</p></div></body>
+</html>

@@ -91,7 +91,7 @@
       <label for="alter-ego">Alter Ego</label>
       <input id="alter-ego" type="text" placeholder="Tyler Durden" required>
       <label for="contact">Contact</label>
-      <input id="contact" type="email" placeholder="tyler.durden@soap.com" required autocapitalize="off" autocomplete="off" spellcheck="false" inputmode="email">
+      <input id="contact" type="email" placeholder="tyler.durden@soap.com" required autocapitalize="off" autocomplete="off" spellcheck="false" inputmode="email" pattern="^[a-z0-9@._-]+$" title="Only lowercase letters, numbers, @ . _ - allowed">
       <label for="dialogue">State Your Dialogue</label>
       <textarea id="dialogue" placeholder="I don't want to die without any scars." required></textarea>
       <button type="submit">Send</button>
@@ -124,6 +124,7 @@ contactEl.addEventListener('input', () => {
     contactEl.value = contactEl.value.toLowerCase();
     try { contactEl.setSelectionRange(s, e); } catch {}
   }
+  if (/^[a-z0-9@._-]+$/.test(contactEl.value) || contactEl.value === '') contactEl.setCustomValidity('');
 });
 contactEl.addEventListener('beforeinput', e => {
   if (e.data && /[A-Z]/.test(e.data)) e.preventDefault();
@@ -154,6 +155,13 @@ document.getElementById('back').addEventListener('click', () => {
 });
 document.getElementById('join-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (!contactEl.checkValidity()) { contactEl.reportValidity(); return; }
+  if (!/^[a-z0-9@._-]+$/.test(contactEl.value.trim())) {
+    contactEl.setCustomValidity('Only lowercase letters, numbers, @ . _ - allowed');
+    contactEl.reportValidity();
+    contactEl.setCustomValidity('');
+    return;
+  } else contactEl.setCustomValidity('');
   const btn = e.target.querySelector('button');
   const payload = {
     alter_ego: document.getElementById('alter-ego').value.trim(),

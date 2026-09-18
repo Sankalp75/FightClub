@@ -43,7 +43,7 @@
       outline: none;
     }
     #join-form input:focus, #join-form textarea:focus { border-color: rgba(255,255,255,0.35); }
-    #join-form textarea { resize: none; min-height: unset; height: 46px; overflow: hidden; white-space: nowrap; }
+    #join-form textarea { resize: none; min-height: 46px; height: 46px; overflow-y: hidden; overflow-x: hidden; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; line-height: 1.5; }
     #join-form button {
       font-family: 'FightThis', 'Arial Narrow', sans-serif;
       font-size: clamp(16px, 1.8vw, 22px);
@@ -91,7 +91,7 @@
       <label for="alter-ego">Alter Ego</label>
       <input id="alter-ego" type="text" placeholder="Tyler Durden" required>
       <label for="contact">Contact</label>
-      <input id="contact" type="email" placeholder="tyler.durden@soap.com" required>
+      <input id="contact" type="email" placeholder="tyler.durden@soap.com" required autocapitalize="off" autocomplete="off" spellcheck="false" inputmode="email">
       <label for="dialogue">State Your Dialogue</label>
       <textarea id="dialogue" placeholder="I don't want to die without any scars." required></textarea>
       <button type="submit">Send</button>
@@ -115,6 +115,39 @@ create policy "allow anon insert" on joins for insert to anon with check (true);
 */
 const SUPABASE_URL = 'https://afdrdgtcynnotokghvxh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmZHJkZ3RjeW5ub3Rva2dodnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NDkxMzYsImV4cCI6MjEwNTMyNTEzNn0.3dfMs3vrwvtyYY5QmDKNZxwwm9RlOfAyfBJXaEMN3yk';
+
+// — block capital letters in contact (input + paste) —
+const contactEl = document.getElementById('contact');
+contactEl.addEventListener('input', () => {
+  if (/[A-Z]/.test(contactEl.value)) {
+    const s = contactEl.selectionStart, e = contactEl.selectionEnd;
+    contactEl.value = contactEl.value.toLowerCase();
+    try { contactEl.setSelectionRange(s, e); } catch {}
+  }
+});
+contactEl.addEventListener('beforeinput', e => {
+  if (e.data && /[A-Z]/.test(e.data)) e.preventDefault();
+});
+contactEl.addEventListener('paste', e => {
+  const t = (e.clipboardData || window.clipboardData).getData('text');
+  if (/[A-Z]/.test(t)) {
+    e.preventDefault();
+    const s = contactEl.selectionStart, en = contactEl.selectionEnd;
+    const lower = t.toLowerCase();
+    contactEl.value = contactEl.value.slice(0, s) + lower + contactEl.value.slice(en);
+    const p = s + lower.length;
+    try { contactEl.setSelectionRange(p, p); } catch {}
+    contactEl.dispatchEvent(new Event('input', {bubbles:true}));
+  }
+});
+
+// — dialogue expands downward, not left —
+const dialogueEl = document.getElementById('dialogue');
+const autoGrow = () => {
+  dialogueEl.style.height = 'auto';
+  dialogueEl.style.height = dialogueEl.scrollHeight + 'px';
+};
+dialogueEl.addEventListener('input', autoGrow);
 
 document.getElementById('back').addEventListener('click', () => {
   window.location.href = 'strong_people.html';
@@ -147,6 +180,7 @@ document.getElementById('join-form').addEventListener('submit', async (e) => {
     });
     if (!r.ok) throw new Error(await r.text());
     e.target.reset();
+    dialogueEl.style.height = '46px';
     alert('Seen. We will find you if you mean it.');
   } catch (err) {
     alert('Failed: ' + err.message);

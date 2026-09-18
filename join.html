@@ -113,8 +113,8 @@ create policy "allow anon insert" on joins for insert to anon with check (true);
 -- extraction via Dashboard needs no extra policy; for API read, add:
 -- create policy "allow authenticated read" on joins for select to authenticated using (true);
 */
-const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL = 'https://afdrdgtcynnotokghvxh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmZHJkZ3RjeW5ub3Rva2dodnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NDkxMzYsImV4cCI6MjEwNTMyNTEzNn0.3dfMs3vrwvtyYY5QmDKNZxwwm9RlOfAyfBJXaEMN3yk';
 
 document.getElementById('back').addEventListener('click', () => {
   window.location.href = 'strong_people.html';

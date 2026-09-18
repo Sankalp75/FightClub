@@ -1,0 +1,55 @@
+name: Bulk Email
+
+on:
+  workflow_dispatch:
+    inputs:
+      subject:
+        description: 'Email subject'
+        required: true
+        type: string
+      body:
+        description: 'Email body (HTML allowed, plain text ok)'
+        required: true
+        type: string
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install nodemailer@6.9.13
+      - name: Send bulk via Gmail
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          SUBJECT: ${{ inputs.subject }}
+          BODY: ${{ inputs.body }}
+        run: node - << 'NODE'
+import nodemailer from 'nodemailer';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const GMAIL_USER = process.env.GMAIL_USER;
+const GMAIL_PASS = process.env.GMAIL_APP_PASSWORD.replace(/\s/g,'');
+const subject = process.env.SUBJECT;
+const body = process.env.BODY;
+const supa = await fetch(`${SUPABASE_URL}/rest/v1/joins?select=contact`, {
+  headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` }
+});
+if (!supa.ok) throw new Error('supabase fetch failed: ' + await supa.text());
+const rows = await supa.json();
+const emails = [...new Set(rows.map(r => (r.contact||'').trim().toLowerCase()).filter(e => /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(e)))];
+if (!emails.length) throw new Error('no contacts');
+console.log(`Sending to ${emails.length}:`, emails);
+const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: GMAIL_USER, pass: GMAIL_PASS }});
+const chunk = (a,n) => a.reduce((c,_,i)=> i%n?c:(c.push(a.slice(i,i+n)),c), []);
+for (const batch of chunk(emails, 50)) {
+  await transporter.sendMail({ from: GMAIL_USER, to: GMAIL_USER, bcc: batch, subject, html: body.includes('<') ? body : `<p>${body}</p>`, text: body });
+  console.log(`sent ${batch.length}`);
+}
+console.log(`Done sent ${emails.length}`);
+NODE

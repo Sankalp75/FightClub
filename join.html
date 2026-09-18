@@ -98,10 +98,63 @@
     </form>
   </main>
 <script>
+// Supabase wiring — replace with your project values from supabase.com -> Project Settings -> API
+// 1) SQL to run once in Supabase SQL Editor:
+/*
+create table joins (
+  id bigserial primary key,
+  alter_ego text not null,
+  contact text not null,
+  dialogue text not null,
+  created_at timestamptz default now()
+);
+alter table joins enable row level security;
+create policy "allow anon insert" on joins for insert to anon with check (true);
+-- extraction via Dashboard needs no extra policy; for API read, add:
+-- create policy "allow authenticated read" on joins for select to authenticated using (true);
+*/
+const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+
 document.getElementById('back').addEventListener('click', () => {
   window.location.href = 'strong_people.html';
 });
-document.getElementById('join-form').addEventListener('submit', e => { e.preventDefault(); e.target.reset(); alert('Seen. We will find you if you mean it.'); });
+document.getElementById('join-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  const payload = {
+    alter_ego: document.getElementById('alter-ego').value.trim(),
+    contact: document.getElementById('contact').value.trim(),
+    dialogue: document.getElementById('dialogue').value.trim()
+  };
+  if (SUPABASE_URL.includes('YOUR_PROJECT')) {
+    alert('Set SUPABASE_URL and SUPABASE_ANON_KEY in join.html first (see comment at top of script).');
+    return;
+  }
+  btn.disabled = true;
+  const prev = btn.textContent;
+  btn.textContent = 'Sending...';
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/joins`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) throw new Error(await r.text());
+    e.target.reset();
+    alert('Seen. We will find you if you mean it.');
+  } catch (err) {
+    alert('Failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prev;
+  }
+});
 </script>
 <script src="script.js"></script>
 <div id="mobile-block" aria-hidden="true"><img src="images/instead.jpg" alt=""><p>Instead use your laptop, Noob!</p></div></body>

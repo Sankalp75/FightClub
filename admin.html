@@ -54,12 +54,13 @@ btn.addEventListener('click', async () => {
   if (!subject || !body) return logEl.textContent = 'Subject and message required';
   btn.disabled = true; btn.textContent = 'Sending...'; logEl.textContent = '';
   try {
-    const r = await fetch('/api/bulk-email', {
+    const r = await fetch('https://hustle24.vercel.app/api/bulk-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-bulk-secret': secret },
       body: JSON.stringify({ subject, html: body.includes('<') ? body : `<p>${body}</p>`, text: body })
     });
-    const j = await r.json();
+    const text = await r.text();
+    let j; try { j = JSON.parse(text); } catch { throw new Error(text.slice(0,300).replace(/<[^>]+>/g,' ').trim() || 'Invalid JSON response'); }
     if (!r.ok) throw new Error(j.error + (j.detail ? ': '+j.detail : ''));
     logEl.textContent = `Sent ${j.sent}/${j.total} from ${j.from}`;
     logEl.style.color = '#7CFC6B';
@@ -73,4 +74,3 @@ btn.addEventListener('click', async () => {
 </script>
 </body>
 </html>
-<!-- vercel trigger 1789765928 -->

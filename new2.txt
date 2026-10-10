@@ -1,0 +1,309 @@
+---
+name: inferno-design
+version: alpha
+description: >
+  Inferno Reserve is a loud, lucha-libre hot-sauce storefront built on a warm
+  bone-paper surface (`#EFE7D6`) stippled with a dotted halftone, inked in
+  near-black char (`#171311`). Heat is the entire palette: a four-stop Scoville
+  ladder from lime (`#5DBB46`) through yellow (`#F2C20A`), orange (`#F26419`) to
+  blood red (`#D81E1E`). The system is neo-brutalist poster art — everything
+  wears a 3px char outline and a hard offset shadow (no soft blur), tags are
+  rotated a few degrees, and a scroll-driven thermometer fills as you climb the
+  spine. Type is maximal: Trade Winds for woodcut display, Anton for stamped
+  uppercase, Kaushan Script for hand-lettered callouts, Archivo for body.
+colors:
+  # Brand / Heat ladder
+  red: '#D81E1E'      # primary brand "voltage"; CTAs, hottest sauces, accents
+  orange: '#F26419'   # second heat stop; mid-gauge, drop shadows on display type
+  yellow: '#F2C20A'   # third heat stop; highlights, tags, on-dark headings
+  lime: '#5DBB46'     # coolest stop; "Shop" button, fresh/verde callouts
+  # Surface
+  bone: '#EFE7D6'     # page surface (paper), card fills, text on dark
+  char: '#171311'     # near-black ink: outlines, dark sections, body text
+  carton: '#3a2c20'   # dark cardboard fill inside the bundle carton
+  # Text
+  text: '#171311'     # body + headings on light (= char)
+  text-on-dark: '#EFE7D6'  # body on char sections (= bone)
+  # Hairlines
+  border: '#171311'   # the universal 3px outline (= char)
+  border-light: '#EFE7D6'  # 3px outline on dark sections (= bone)
+  # Gradient
+  heat-grad: 'linear-gradient(90deg,#F2C20A,#F26419,#D81E1E)'  # scroll progress bar
+  merc-grad: 'linear-gradient(to top,#D81E1E,#F26419,#F2C20A)' # thermometer mercury
+typography:
+  display:
+    fontFamily: "'Trade Winds', cursive"
+    fontSize: clamp(64px,9vw,140px)
+    fontWeight: 400
+    lineHeight: 0.82
+  stamp:
+    fontFamily: "'Anton', sans-serif"
+    fontSize: 20px
+    fontWeight: 400
+    letterSpacing: 1px
+    textTransform: uppercase
+  script:
+    fontFamily: "'Kaushan Script', cursive"
+    fontSize: 30px
+    fontWeight: 400
+  body:
+    fontFamily: "'Archivo', sans-serif"
+    fontSize: 18px
+    fontWeight: 700
+  eyebrow:
+    fontFamily: "'Archivo', sans-serif"
+    fontSize: 13px
+    fontWeight: 700
+    letterSpacing: 4px
+    textTransform: uppercase
+rounded:                  # almost everything is sharp; only blobs/dots are round
+  none: 0px
+  full: 9999px           # thermometer bulb, flame slots
+spacing:                  # base unit 4px; Tailwind scale
+  xs: 4px
+  sm: 8px
+  md: 16px
+  lg: 24px
+  xl: 32px
+  xxl: 80px              # section py-20
+components:
+  navbar:
+    backgroundColor: '{colors.char}'
+    textColor: '{colors.bone}'
+    borderColor: '{colors.char}'
+    typography: '{typography.eyebrow}'
+    height: '72px'
+  shopButton:
+    backgroundColor: '{colors.lime}'
+    textColor: '{colors.char}'
+    borderColor: '{colors.char}'
+    typography: '{typography.stamp}'
+    rounded: '{rounded.none}'
+    padding: '8px 20px'
+    shadow: '8px 8px 0 0 #171311'   # offset-char
+  ctaPrimary:
+    backgroundColor: '{colors.red}'
+    textColor: '{colors.bone}'
+    borderColor: '{colors.char}'
+    typography: '{typography.stamp}'
+    rounded: '{rounded.none}'
+    padding: '12px 28px'
+    shadow: '8px 8px 0 0 #171311'
+  sauceCard:
+    backgroundColor: '{colors.bone}'
+    textColor: '{colors.char}'
+    borderColor: '{colors.char}'
+    rounded: '{rounded.none}'
+    padding: '16px'
+    shadow: '8px 8px 0 0 #171311'
+  tag:
+    backgroundColor: '{colors.yellow}'
+    textColor: '{colors.char}'
+    borderColor: '{colors.char}'
+    typography: '{typography.stamp}'
+    rounded: '{rounded.none}'
+    padding: '8px 16px'
+    note: 'rotated ±2-8deg; offset-char shadow'
+  priceChip:
+    backgroundColor: '{colors.lime}'
+    textColor: '{colors.char}'
+    borderColor: '{colors.char}'
+    typography: '{typography.stamp}'
+    clipPath: 'polygon(6% 0,100% 0,94% 100%,0 100%)'  # tag-cut
+    padding: '4px 12px'
+  emailInput:
+    backgroundColor: '{colors.char}'
+    textColor: '{colors.bone}'
+    borderColor: '{colors.bone}'
+    typography: '{typography.body}'
+    rounded: '{rounded.none}'
+    padding: '12px 16px'
+motion:
+  flicker: 'flame emoji scale+rotate jitter, .35s infinite, triggered on scroll into view'
+  hazewob: 'card hover blur(.6px)+contrast+saturate pulse, .5s infinite'
+  scrollx: 'marquee ticker translateX 0→-50%, 18s linear infinite'
+  thermometer: 'mercury fill height tied to spine section scroll progress (Lenis)'
+  progressBar: 'fixed top heat-gradient bar, width = scroll progress'
+  parallax: 'data-scroll-speed elements translateY by -center*speed*0.06 per rAF'
+  bottleDrop: 'anime.js spring (stiffness 90, damping 8, mass 1.4) translateY+rotate on add'
+  ctaGlow: 'anime.js boxShadow halo 0 0 36px rgba(242,100,25,.8) on hover, .3s'
+  buttonNudge: 'CTAs translate (2px,2px) on hover collapsing the offset shadow'
+icons:
+  library: emoji + game-icons (lorc burst-blob SVG)
+  style: emoji glyphs (🔥 🌶️) + one CSS-filtered orange burst-blob behind hero
+  sizes: { md: 24px, lg: 30px }
+  color: '{colors.orange}'
+---
+
+# Inferno Reserve
+
+`inferno-design · alpha`
+
+> Design spec — version alpha. Source: static HTML (`index.html`); tokens read
+> from inline styles + `:root` variables + Tailwind arbitrary values.
+> Fictional/sample product; described factually.
+
+## Overview
+Inferno Reserve is a neo-brutalist poster for a small-batch hot-sauce brand,
+pitched somewhere between a lucha-libre fight bill and a chili-fermenter's
+field journal. The whole page sits on warm bone paper (`#EFE7D6`) printed with
+a two-layer radial dot halftone (`.paper`, 14px/28px grids) and inked in
+near-black char (`#171311`). Color *is* the product: a Scoville heat ladder
+runs lime (`#5DBB46`) → yellow (`#F2C20A`) → orange (`#F26419`) → red
+(`#D81E1E`), and that same ramp reappears as the fixed scroll-progress bar and
+the gradient "mercury" of a vertical thermometer that fills as you climb the
+sauce spine. The signature move is relentless: every box wears a `3px` char
+outline plus a *hard* offset shadow (`6–8px 6–8px 0 0`, no blur), labels and
+tags are tilted ±2–8°, and headlines stack in a woodcut display face with a
+solid colored drop-shadow. The type story is maximal four-voice — Trade Winds
+woodcut (`.font-wm`) for big display, Anton (`.font-anton`) for stamped
+uppercase, Kaushan Script (`.font-script`) for hand-lettered asides, and
+Archivo (`.font-grot`) heavy for body and eyebrows.
+
+## Colors
+**Brand / heat ladder.** The palette is a single hot-to-cool gauge defined in
+`:root`. `--red #D81E1E` is the primary voltage: the "Build a Box" CTA, the
+hottest sauce numbers, the ticker bar, the price-add buttons. `--orange
+#F26419` is the mid stop — used for display drop-shadows and the
+"fermented" script tag. `--yellow #F2C20A` highlights eyebrows, the SHU badge,
+the Running-Total bar, and on-dark headings. `--lime #5DBB46` is the coolest
+note — the "Shop" button, verde callouts, and the tag-cut price chips.
+
+**Surface.** `--bone #EFE7D6` is the page paper and the light card fill; on dark
+sections it flips to become the text color. `--char #171311` is the near-black
+ink used for every outline, the navbar, the pepper collage section, and the
+footer. A one-off `#3a2c20` warm cardboard fills the bundle carton.
+
+**Text.** Body and headings are char (`#171311`) on light; on the char-filled
+sections text becomes bone (`#EFE7D6`), often at `/80`–`/90` opacity for
+secondary copy and `/40` for the copyright line.
+
+**Hairlines.** There is exactly one border treatment — a `3px` solid line, char
+on light surfaces and bone on dark surfaces (`border-[3px] border-[#171311]` /
+`border-[#EFE7D6]`).
+
+**Gradients.** Two: the fixed progress bar `linear-gradient(90deg, yellow,
+orange, red)` with a red glow, and the thermometer mercury
+`bg-gradient-to-t from-red via-orange to-yellow`. Image overlays use a
+`mix-blend-multiply` red wash at 15%.
+
+## Typography
+Four Google-Fonts faces, all loaded in one `@import`. **Trade Winds** is the
+woodcut display face (carnival/tiki signage); a close open substitute is
+"Rye" or "Smokum". **Anton** is the condensed uppercase stamp face. **Kaushan
+Script** is the brush/hand-lettered accent. **Archivo** (400–900) carries all
+body and eyebrow text, almost always at `font-bold`/`font-extrabold`.
+
+| Token   | Size                 | Weight | Line-height | Tracking | Usage |
+|---------|----------------------|--------|-------------|----------|-------|
+| display | clamp(64px,9vw,140px)| 400    | 0.82        | —        | Hero `BOTTLED FIRE`, section H2s, footer wordmark (`.font-wm`) |
+| stamp   | 16–40px              | 400    | 1 (none)    | wide     | Buttons, tags, SHU numbers, section labels (`.font-anton`, uppercase) |
+| script  | 18–30px              | 400    | normal      | —        | "¡Caliente!", sauce names, "stay scorched" (`.font-script`) |
+| body    | 14–20px              | 700    | snug        | —        | Paragraph copy, footer links (`.font-grot` bold) |
+| eyebrow | 13px                 | 700    | normal      | 4px (0.25em) | Nav links, section sub-labels (`.font-grot` uppercase) |
+
+Hero `FIRE` and stroked headlines use `-webkit-text-stroke:3px #171311` with a
+yellow or bone fill (`.txt-stroke`, `.txt-stroke-y`).
+
+## Layout
+Base unit is 4px (Tailwind). Pages are centered to `max-width:1440px` with
+`px-6` gutters; sections separate via full-width `border-b-[3px]` rules and
+`py-20` (80px) vertical rhythm. The composition is poster-collage: an
+**overlapping hero** with a 52%-width parallax image bleeding to the right edge,
+a giant burst-blob SVG behind the headline, and rotated tags absolutely
+positioned over it. The **Scoville Spine** alternates left/right sauce cards
+(each `w-[44%]`) around a centered vertical thermometer column. The **pepper
+collage** is a `min-h-[860px]` char canvas with absolutely-positioned, rotated
+botanical photos and script/stamp tags at varied `z` layers. The **bundle
+builder** is a two-column grid (carton + sauce list). Whitespace is loud and
+deliberate — generous gaps, big type, nothing timid.
+
+## Elevation & Depth
+No soft shadows anywhere. Depth is built from two devices: (1) the universal
+`3px` char/bone outline on every surface, and (2) hard *offset* drop-shadows
+with zero blur — `offset-lime`/`offset-red`/`offset-yellow` at `6px 6px 0 0`
+and `offset-char` at `8px 8px 0 0`. The display headlines add a flat colored
+`drop-shadow-[Npx_Npx_0_color]`. The only blurred shadow in the system is the
+red glow under the progress bar and the JS-driven orange glow halo on the hero
+CTA hover. Hover often *collapses* the offset (translate +2px,+2px) so buttons
+feel physically pressed.
+
+## Shapes
+Brutally rectangular. The default radius is `0` — cards, buttons, tags, inputs
+all have sharp corners. The only round shapes are `rounded-full`: the
+thermometer bulb (`w-16 h-16`) and the bottle/flame accents. One angular
+flourish is the price chip's parallelogram `clip-path` (`.tag-cut`) and the
+char zigzag border helper (`.zig`, sawtooth via layered gradients). Everything
+else is squared off and tilted rather than rounded.
+
+## Components
+- **Navbar** — char fill, bone text, `72px` tall, `3px` char bottom border;
+  Trade Winds wordmark left, uppercase eyebrow links (hover to a heat color),
+  lime "Shop" stamp button with `offset-char`.
+- **Primary CTA** ("Build a Box", "Checkout the Heat", "Ignite") — red fill,
+  bone text, `3px` char border, Anton uppercase, `offset-char`; hover adds glow.
+- **Secondary CTA** ("Meet the Heat") — transparent, `3px` char border, char
+  text; hover inverts to char fill + yellow text.
+- **Sauce card** — bone fill (or char fill for the hottest), `3px` border,
+  `offset-char`/`offset-red`, photo with `3px` bottom border, `p-4` body with a
+  script name, Anton SHU number, and bold Archivo description; `.heat-haze`
+  hover shimmer.
+- **Tag / sticker** — solid heat-color fill, `3px` border, Anton or script,
+  rotated ±2–8°, `offset-char`. Used for "¡Caliente!", "1.2M SHU max", collage
+  labels.
+- **Price chip** — lime fill, `2px` char border, parallelogram `tag-cut`
+  clip-path, Anton `$NN`.
+- **Add button** — `40×40` red square, `3px` char border, Anton `+`, bone text.
+- **Running-total bar** — yellow fill, `3px` char border, `offset-char`, Anton
+  label + red total.
+- **Email form** — char-fill input with bone `3px` outer border, bone text,
+  red Anton "Ignite" submit; no radius.
+- **Ticker** — red bar, bone Anton uppercase, infinite horizontal marquee.
+
+## Motion
+Heavy, playful, JS-driven (Lenis smooth-scroll + anime.js). `@keyframes
+flicker` jitters flame emojis (scale 0.92–1.15, rotate ±3°, `.35s` infinite)
+when scrolled into view. `@keyframes hazewob` adds a hover heat-shimmer on cards
+(`blur .6px`, contrast/saturate pulse, `.5s`). `@keyframes scrollx` runs the
+ticker marquee (`18s linear`). Lenis scroll drives the fixed gradient progress
+bar width and the thermometer mercury fill height. Multiple `data-scroll-speed`
+elements parallax via per-frame `translateY` (`-center * speed * 0.06`). The
+bundle builder drops bottles with an anime.js spring (stiffness 90, damping 8,
+mass 1.4) and bounces the `+` button (scale 1→0.8→1). The hero CTA gets an
+animated orange glow halo on `pointerenter`. Buttons nudge +2/+2px on hover to
+collapse their offset shadow.
+
+## Iconography
+No icon font. UI heat is carried by **emoji** — 🔥 above each sauce card and in
+the footer row, plus 🌶️. One decorative vector: a `game-icons` (lorc)
+`burst-blob.svg` placed behind the hero headline and recolored to orange via a
+CSS `filter: invert/sepia/saturate/hue-rotate` chain. Sizes are `text-3xl`
+(30px) for card flames, `text-3xl` for footer glyphs. Icons are decorative,
+never functional controls.
+
+## Do's and Don'ts
+- **Do** outline every surface with the `3px` char (or bone-on-dark) border and
+  pair it with a hard zero-blur offset shadow.
+- **Do** keep corners sharp (`radius 0`); reserve `rounded-full` for the
+  thermometer bulb and bottle accents only.
+- **Do** tilt tags and stickers a few degrees and let elements overlap/bleed.
+- **Do** spend the four-color heat ladder meaningfully — cool lime → blood red
+  as intensity rises.
+- **Don't** introduce soft blurred drop-shadows (the only blur glows are the
+  progress bar and the hero CTA hover halo).
+- **Don't** mix the four display faces into one block — one voice per role
+  (woodcut display, stamp uppercase, script aside, Archivo body).
+- **Don't** soften the palette or use gray; the surface is bone, the ink is
+  char, and accents are saturated heat colors.
+
+## Known Gaps
+- Typography `fontSize` values are role exemplars; sizes are used responsively
+  across a range (e.g. Anton 16–40px, H2s `text-5xl md:text-7xl`) rather than a
+  single fixed scale.
+- `letterSpacing` for `.font-anton` (`tracking-wide`/`tracking-widest`) and
+  eyebrows (`0.2em`/`0.25em`) is approximated to px; exact tracking varies by
+  utility class.
+- The hero burst-blob's recolor comes from a CSS `filter` chain, not a literal
+  hex; "orange" is the visual result, not a declared color value.
+- Section `py-20` (80px) is the dominant rhythm; smaller paddings (`p-4`,
+  `p-5`, `p-6`) are per-component and not folded into the spacing scale.

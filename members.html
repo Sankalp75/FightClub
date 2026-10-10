@@ -6,6 +6,53 @@
   <title>Members</title>
   <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: #050505;
+      min-height: 100vh;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: #050505 url('images/members-bg.jpg') center center / cover no-repeat;
+      filter: blur(10px);
+      transform: scale(1.05);
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to bottom, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.66) 40%, rgba(0,0,0,0.84) 100%);
+    }
+    header, #grid { position: relative; z-index: 1; }
+    #grid .card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(14px) saturate(1.2);
+      -webkit-backdrop-filter: blur(14px) saturate(1.2);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+      padding: 0 0 2em;
+      overflow: hidden;
+    }
+    #grid .card:hover { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.12); }
+    #grid .card .photo {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    #grid .card .num { margin-top: 1.6em; }
+    #grid .card h2, #grid .card p { padding-left: 1.8em; padding-right: 1.8em; }
+  </style>
 </head>
 <body>
   <button id="back">Back</button>
@@ -15,34 +62,40 @@
   </header>
   <main id="grid">
     <div class="card">
+      <img class="photo" src="images/members-bg.jpg" alt="Tyler">
       <div class="num">01</div>
       <h2>Tyler</h2>
-      <p>The idea. Burns bright, talks louder, never asks permission.</p>
+      <p>"The idea. Burns bright, talks louder, never asks permission."</p>
     </div>
     <div class="card">
+      <img class="photo" src="images/members-bg.jpg" alt="The Narrator">
       <div class="num">02</div>
       <h2>The Narrator</h2>
-      <p>Woke up. Stopped sleeping. Started building something real.</p>
+      <p>"Woke up. Stopped sleeping. Started building something real."</p>
     </div>
     <div class="card">
+      <img class="photo" src="images/members-bg.jpg" alt="The Fighter">
       <div class="num">03</div>
       <h2>The Fighter</h2>
-      <p>Shows up, goes hard, holds the line when others fade.</p>
+      <p>"Shows up, goes hard, holds the line when others fade."</p>
     </div>
     <div class="card">
+      <img class="photo" src="images/members-bg.jpg" alt="The Builder">
       <div class="num">04</div>
       <h2>The Builder</h2>
-      <p>Makes things that outlast talk. Hands dirty, work speaks.</p>
+      <p>"Makes things that outlast talk. Hands dirty, work speaks."</p>
     </div>
     <div class="card">
+      <img class="photo" src="images/members-bg.jpg" alt="The Keeper">
       <div class="num">05</div>
       <h2>The Keeper</h2>
-      <p>Keeps the rules. No hierarchy, no titles, just accountability.</p>
+      <p>"Keeps the rules. No hierarchy, no titles, just accountability."</p>
     </div>
     <div class="card">
+      <img class="photo" src="images/members-bg.jpg" alt="You">
       <div class="num">06</div>
       <h2>You — ?</h2>
-      <p>Earn it. Prove you mean it. Weak excuses get you out faster than any bouncer could.</p>
+      <p>"Earn it. Prove you mean it. Weak excuses get you out."</p>
     </div>
   </main>
 <script>

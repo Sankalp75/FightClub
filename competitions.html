@@ -6,6 +6,53 @@
   <title>Competitions</title>
   <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: #050505;
+      min-height: 100vh;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: #050505 url('images/competitions-bg.jpg') center center / cover no-repeat;
+      filter: blur(10px);
+      transform: scale(1.05);
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.60) 40%, rgba(0,0,0,0.82) 100%);
+    }
+    header, #grid { position: relative; z-index: 1; }
+    #grid .card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(14px) saturate(1.2);
+      -webkit-backdrop-filter: blur(14px) saturate(1.2);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+      padding: 0 0 2em;
+      overflow: hidden;
+    }
+    #grid .card:hover { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.12); }
+    #grid .card .photo {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    #grid .card .num { margin-top: 1.6em; }
+    #grid .card h2, #grid .card p { padding-left: 1.8em; padding-right: 1.8em; }
+  </style>
 </head>
 <body>
   <button id="back">Back</button>
@@ -15,31 +62,37 @@
   </header>
   <main id="grid">
     <div class="card">
+      <img class="photo" src="images/competitions-bg.jpg" alt="Break">
       <div class="num">01</div>
       <h2>Break</h2>
       <p>Smash the comfort. Destroy the chair you keep hiding behind. If it holds you back, it goes.</p>
     </div>
     <div class="card">
+      <img class="photo" src="images/competitions-bg.jpg" alt="Sweat">
       <div class="num">02</div>
       <h2>Sweat</h2>
       <p>50 burpees before sunrise. No excuses, no music, just breathing and pain.</p>
     </div>
     <div class="card">
+      <img class="photo" src="images/competitions-bg.jpg" alt="Build">
       <div class="num">03</div>
       <h2>Build</h2>
       <p>Fix one broken thing with your hands. No buying, no calling someone else.</p>
     </div>
     <div class="card">
+      <img class="photo" src="images/competitions-bg.jpg" alt="Face">
       <div class="num">04</div>
       <h2>Face</h2>
       <p>Have the conversation you've been avoiding. Look them in the eye.</p>
     </div>
     <div class="card">
+      <img class="photo" src="images/competitions-bg.jpg" alt="Endure">
       <div class="num">05</div>
       <h2>Endure</h2>
       <p>Sleep on the floor for 3 nights. Remember what soft has stolen from you.</p>
     </div>
     <div class="card">
+      <img class="photo" src="images/competitions-bg.jpg" alt="Proof">
       <div class="num">06</div>
       <h2>Proof</h2>
       <p>Show, don't tell. Bring back evidence. No proof = never happened.</p>

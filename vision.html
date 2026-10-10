@@ -6,6 +6,53 @@
   <title>Vision</title>
   <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: #050505;
+      min-height: 100vh;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: #050505 url('images/vision-bg.jpg') center center / cover no-repeat;
+      filter: blur(10px);
+      transform: scale(1.05);
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.60) 40%, rgba(0,0,0,0.82) 100%);
+    }
+    header, #grid { position: relative; z-index: 1; }
+    #grid .card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(14px) saturate(1.2);
+      -webkit-backdrop-filter: blur(14px) saturate(1.2);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+      padding: 0 0 2em;
+      overflow: hidden;
+    }
+    #grid .card:hover { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.12); }
+    #grid .card .photo {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    #grid .card .num { margin-top: 1.6em; }
+    #grid .card h2, #grid .card p { padding-left: 1.8em; padding-right: 1.8em; }
+  </style>
 </head>
 <body>
   <button id="back">Back</button>
@@ -14,12 +61,12 @@
     <p>We don't dream of a better life — we build it. Comfort is the enemy, average is the cage. We burn the script and write our own.</p>
   </header>
   <main id="grid">
-    <div class="card"><div class="num">01</div><h2>Awake</h2><p>See the lie. The job, the debt, the feed — all anesthesia. Wake up or stay numb.</p></div>
-    <div class="card"><div class="num">02</div><h2>Break</h2><p>Destroy the identity they sold you. Smash the mirror and choose who stares back.</p></div>
-    <div class="card"><div class="num">03</div><h2>Suffer</h2><p>Pain is the teacher. We seek it, we use it, we never run from it.</p></div>
-    <div class="card"><div class="num">04</div><h2>Build</h2><p>With hands, sweat, and late nights. No talk. Work that outlives us.</p></div>
-    <div class="card"><div class="num">05</div><h2>Brotherhood</h2><p>No leaders, no followers. We hold the line for each other or we fall alone.</p></div>
-    <div class="card"><div class="num">06</div><h2>Own</h2><p>Own your life, your failures, your freedom. No excuses, no permission needed.</p></div>
+    <div class="card"><img class="photo" src="images/vision-bg.jpg" alt="Awake"><div class="num">01</div><h2>Awake</h2><p>"See the lie. The job, the debt, the feed — all anesthesia. Wake up or stay numb."</p></div>
+    <div class="card"><img class="photo" src="images/vision-bg.jpg" alt="Break"><div class="num">02</div><h2>Break</h2><p>"Destroy the identity they sold you. Smash the mirror and choose who stares back."</p></div>
+    <div class="card"><img class="photo" src="images/vision-bg.jpg" alt="Suffer"><div class="num">03</div><h2>Suffer</h2><p>"Pain is the teacher. We seek it, we use it, we never run from it."</p></div>
+    <div class="card"><img class="photo" src="images/vision-bg.jpg" alt="Build"><div class="num">04</div><h2>Build</h2><p>"With hands, sweat, and late nights. No talk. Work that outlives us."</p></div>
+    <div class="card"><img class="photo" src="images/vision-bg.jpg" alt="Brotherhood"><div class="num">05</div><h2>Brotherhood</h2><p>"No leaders, no followers. We hold the line for each other or we fall alone."</p></div>
+    <div class="card"><img class="photo" src="images/vision-bg.jpg" alt="Own"><div class="num">06</div><h2>Own</h2><p>"Own your life, your failures, your freedom. No excuses, no permission needed."</p></div>
   </main>
 <script>
 document.getElementById('back').addEventListener('click', () => {

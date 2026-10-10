@@ -1,0 +1,207 @@
+THIS.txt — HUSTLE CLUB / FightClub Website — Complete AI-Readable Spec
+========================================================================
+Date: 2026-09-23
+Repo: Sankalp75/FightClub (GitHub Pages + Vercel)
+Stack: Vanilla HTML/CSS/JS, no framework, no build step. Supabase (joins table), Vercel Serverless (nodemailer Gmail), GitHub Actions bulk-email workflow.
+
+1. PHILOSOPHY / THEME
+---------------------
+- Brand: "HUSTLE CLUB" (theme is Fight Club). Taglines: "Fuck yourself for a dream life", "Live the same fucking life", "You are not your job. You are not your fucking khakis."
+- Tone: Brutalist, black (#050505) + white + blood red (#c00000), FightThis display font + Anton body, blurred full-screen imagery, cinematic vignette.
+- Desktop-only by design. Mobile gate blocks everything <=768px: #mobile-block (z-index 99999) shows blurred images/instead.jpg + text "Instead use your laptop, Noob!" full-screen overlay. Intentional filter, not bug.
+- No hierarchy copy: "No leaders, no followers", proof-over-talk.
+
+2. FILE TREE
+------------
+.
+├── index.html              → landing (entry point for Pages)
+├── strong_people.html      → hub with 5 full-viewport banners (Vision, Projects, Members, Competitions, Join)
+├── weak_people.html        → dead-end for "weak" choice: centered text "Sorry, This World is not for you princess" over blurred princes.jpg
+├── vision.html             → Vision detail (6 cards)
+├── projects.html           → Projects detail (6 cards)
+├── members.html            → Members detail (6 cards)
+├── competitions.html       → Competitions detail (6 cards) — also tasks.html duplicate same content
+├── tasks.html              → duplicate of competitions.html (orphan, same back logic)
+├── join.html               → Join form (Supabase insert)
+├── admin.html              → Hidden bulk-email admin (noindex), sends to all joins via Vercel API
+├── style.css               → Global: font-face, #back blood spill, #mobile-block, header/grid/cards
+├── script.js               → Shared mousemove blood spill (--x/--y) with rAF throttling for #back + #join-form button
+├── FightThis.ttf           → Display font
+├── images/
+│   ├── Final.jpg           → landing split face (Narrator left / Tyler right, same file masked)
+│   ├── princes.jpg         → weak_people background
+│   ├── gurl.jpg            → vision-banner background
+│   ├── members.jpg         → members banner (#scene)
+│   ├── projects.jpg        → projects-banner
+│   ├── tasks.jpg           → competitions-banner
+│   ├── join.png            → join-banner
+│   ├── instead.jpg         → mobile gate background (Patrick Bateman brick phone)
+│   └── ...                 → other illustrative
+├── api/bulk-email.js       → Vercel Serverless POST /api/bulk-email
+├── .github/workflows/bulk-email.yml → Manual workflow_dispatch bulk via Gmail
+├── package.json            → {type: module, nodemailer 6.9.13}
+└── README.md               → manifesto + hosting instructions
+
+3. DESIGN TOKENS
+----------------
+- Background: #050505 everywhere. Cards: border 1px rgba(255,255,255,0.12) bg rgba(255,255,255,0.04) hover 0.28/0.07.
+- Text: rgba(255,255,255,0.95) headings, 0.55 body, 0.35 num labels.
+- Fonts: 'FightThis' (FightThis.ttf) for headings/buttons (letter-spacing 0.10-0.14em), 'Anton' sans-serif for body.
+- Banner buttons: relative z-index 3, font clamp(28px,5vw,90px), padding 0.6em 1.2em, border 2px rgba(255,255,255,0.5) bg rgba(0,0,0,0.4) box-shadow 0 0 30px rgba(0,0,0,0.6) hover bg rgba(255,255,255,0.85) color #000. Layer img: absolute inset 0 object-fit cover filter blur(10px) scale 1.02-1.05.
+- Back button (#back): fixed left 3vw top 3vh z 10, font clamp(14px,1.4vw,22px), bg #fff border 1px #fff color #000 padding 0.4em 1.2em, isolation isolate overflow hidden, --x/--y 50%, transform translateZ(0). ::before 300% circle bg #c00000 border-radius 50% left var(--x) top var(--y) transform translate(-50%,-50%) scale(0) transition 2.70s cubic-bezier(0.22,1,0.36,1). On hover scale(1) + border-color #c00000. rAF-throttled mousemove updates --x/--y in script.js. (Note legacy CSS #back.absolute and #vision-banner #back,#scene #back {position:absolute} remains but unused after moving button outside banner.)
+- Grid: #grid max-width 1100px margin 0 auto padding 4vh 6vw 10vh display grid repeat(auto-fill,minmax(280px,1fr)) gap 2.5vw.
+- Header: text-align center padding 14vh 6vw 6vh h1 clamp(32px,6vw,90px) + p 14-18px opacity 0.55 max-width 650px line-height 1.6.
+
+4. index.html — LANDING (329 lines)
+------------------------------
+Structure:
+- html/body {width:100% height:100% overflow:hidden bg #050505} body cursor none.
+- #scene {relative 100vw×100vh}
+  - img#narrator-layer.layer + img#tyler-layer.layer : SAME src images/Final.jpg, absolute inset 0 will-change filter transition 0.65s.
+    * narrator-layer mask: linear-gradient(to right, black 0%, black 36%, rgba(0,0,0,0.80)46%, 0.30 56%, transparent 68%) z1 filter brightness1.08 saturate1.05 contrast1.04
+    * tyler-layer mask:   to left, black0% black33% 0.85 43% 0.25 55% transparent67% z2 filter brightness0.18 saturate0.08 contrast0.88
+  - #vignette {z4 radial ellipses90%65% + linear gradient bottom vignette}
+  - #title {absolute inset 0 z3 flex col center 'Hustle<br>club' clamp 40px-120px opacity0.88}
+  - #tagline {absolute left3vw bottom2.5vh z8 'Fuck yourself for a dream life' clamp18-38px opacity0.55}
+  - #headline {right3vw bottom2.5vh z8 'Live the same fucking life' opacity0.70}
+- #dot {fixed 6px circle bg #fff mix-blend-difference z9999}
+- #modal {fixed inset 0 z100 display none bg rgba(0,0,0,0.82) flex col center} .warning clamp20-52px + .actions gap2vw buttons transparent border rgba(255,255,255,0.40) hover bg rgba(255,255,255,0.85)
+- #mobile-block (shared)
+
+Behavior JS (inline bottom):
+- State: active='narrator', blurred=false, mx/my.
+- FILTERS: narrator 1.08/1.05/1.04, tyler 1.28/1.12/1.08, off 0.18/0.08/0.88.
+- applyFilters(): b='blur(8px)' if blurred else '' → set layer filters, tagline/headline filter b, title if blurred blur16px opacity0.83 else reset.
+- switchTo(char): updates sceneEl.className narrator-on/tyler-on + applyFilters().
+- mousemove: dot follows, mid=innerWidth/2 DEAD=48 → <mid-48 switch narrator, >mid+48 switch tyler. Inside dead zone no switch.
+- QUESTIONS = {strong:{text:'Are you strong enough to embrace pain ?',page:'strong_people.html'}, weak:{text:'Are you weak enough to die ?',page:'weak_people.html'}}
+- click on document: openModal(e.clientX<mid ? 'strong':'weak') → set modalQ.textContent, dataset.kind, class show, blurred true applyFilters.
+- #btn-yeah → location.href = QUESTIONS[dataset.kind].page
+- #btn-nope → remove show, blurred false.
+- Note: cursor none everywhere, dot is cursor replacement.
+
+Routing: index → strong_people or weak_people.
+
+5. strong_people.html — HUB (242 lines) CURRENT STATE AFTER FIXES
+--------------------------------------------------------------------
+- Has html,body overflow-x hidden (y scroll allowed). 5 sequential 100vh banners vertical scroll:
+  1) #vision-banner {relative 100vw×100vh flex center overflow hidden} .layer absolute blur10px scale1.02 bg images/gurl.jpg → <a id="vision-title" href="vision.html">Vision</a>
+  2) #projects-banner {same scale1.05 bg images/projects.jpg} → <a id="projects-title" href="projects.html">Projects</a>
+  3) #scene {same scale1.05 bg images/members.jpg} → <a id="title" href="members.html">Members</a>  // legacy id title, not members
+  4) #competitions-banner {scale1.02 bg images/tasks.jpg} → <a id="competitions-title" href="competitions.html">Competitions</a>
+  5) #join-banner {scale1.02 bg images/join.png} → <a id="join-title" href="join.html">Join</a>
+- Each banner title style identical (see tokens).
+- BACK button: DIRECT child of <body> BEFORE all banners: <button id="back">BACK</button> (renamed 2026-09-23 from "Back to landing"). Position fixed left3vw top3vh z10 via style.css #back. Previously was inside #vision-banner with #vision-banner #back {position:absolute} causing it to scroll away with first banner; now global fixed visible on entire scroll. Keeps same visual position at top when page loads.
+- Click handler: location.href='index.html' (back to landing).
+- Includes <script src="script.js"> for blood spill + mobile-block.
+- Hash navigation support: banners have ids suitable for anchor scroll: #vision-banner, #projects-banner, #scene, #competitions-banner, #join-banner. No smooth JS; browser native hash scroll suffices.
+
+6. weak_people.html — DEAD END (58 lines)
+------------------------------------------
+- html,body 100% overflow hidden bg #050505
+- #scene relative 100vw×100vh flex center → img.layer absolute blur10px bg images/princes.jpg → div#title "Sorry, This World is not for you princess" z3 FightThis clamp 28-90px + same banner button styling (no link, just text). + <button id="back">Back to landing</button> (still original text, separate from strong_people fix) → click location.href='index.html'. No scrolling.
+
+7. DETAIL PAGES — vision/projects/members/competitions/tasks (31-55 lines each)
+--------------------------------------------------------------------------------
+Shared pattern (vision, projects, members, competitions, tasks): button#back + header + main#grid (6 .card).
+- header h1 Letter-spacing 0.14em, p description 0.55 opacity.
+- #grid 1-3 columns auto-fill min280px.
+- Each card: .num 01-06, h2, p (content described below).
+- #back text "Back" (capital B) fixed top-left same style. Click now HASH-NAVIGATES to preserve scroll position in strong_people:
+  * vision.html → strong_people.html#vision-banner
+  * projects.html → #projects-banner
+  * members.html → #scene  (the Members banner)
+  * competitions.html & tasks.html → #competitions-banner
+  * join.html → #join-banner (see next)
+  Previously all used plain strong_people.html which reset scroll to top; now browser lands directly in front of originating banner (user reported "tapped Members and Back returned to top instead of Members screen" — fixed).
+
+Card contents:
+- vision.html: 01 Awake / 02 Break / 03 Suffer / 04 Build / 05 Brotherhood / 06 Own
+- projects.html: 01 Fight Soap / 02 Training Regime / 03 Paper Street Films / 04 Underground Zine / 05 Shelter Build / 06 Your Project
+- members.html: 01 Tyler / 02 The Narrator / 03 The Fighter / 04 The Builder / 05 The Keeper / 06 You — ?
+- competitions.html/tasks.html: 01 Break / 02 Sweat (50 burpees) / 03 Build / 04 Face / 05 Endure (sleep on floor 3 nights) / 06 Proof
+
+8. join.html — JOIN FORM (203 lines)
+-------------------------------------
+- Same #back → hash #join-banner.
+- header Join + p "No applications..."
+- #form-wrap max-width 560px margin 6vh auto 12vh padding 0 6vw h2 Step in + form#join-form flex col gap1.2em.
+- Fields: label Alter Ego input#alter-ego text placeholder "Tyler Durden" required; label Contact input#contact type email placeholder tyler.durden@soap.com required autocapitalize off pattern ^[a-z0-9@._-]+$ title lowercase only; label State Your Dialogue textarea#dialogue placeholder "I don't want to die without any scars." required (initial 46px height auto-grows downwards via JS). Button type submit Send styling same blood spill as #back (300% circle, --x/--y, 2.70s).
+- Supabase config inline: SUPABASE_URL https://afdrdgtcynnotokghvxh.supabase.co SUPABASE_ANON_KEY eyJ... (anon key hard-coded). SQL table joins(id bigserial pk, alter_ego text, contact text, dialogue text, created_at timestamptz). RLS policy "allow anon insert".
+- Contact lowercase enforcement: input listener lowercases, beforeinput blocks capitals, paste lowercases, setCustomValidity.
+- AutoGrow: dialogueEl input → height auto → scrollHeight.
+- Submit handler: validate contact regex, payload {alter_ego, contact, dialogue} trimmed, POST to /rest/v1/joins with apikey+Bearer anon + Prefer return=minimal. On success reset form height 46px alert "Seen. We will find you..." On fail alert Failed.
+- script.js for blood on both back + submit button.
+
+9. admin.html — BULK EMAIL ADMIN (77 lines)
+--------------------------------------------
+- meta robots noindex. * margin0 padding0. body #050505 padding 6vw. h1 Bulk Email + p.sub. #card max560 bg04 border. Inputs: #secret password (stored localStorage bulk_secret), #subject, #body textarea HTML allowed. button#send Send to all. #log. a.back fixed top-left to index.html.
+- JS: secretEl localStorage sync, on click validate secret+subject+body, POST to https://hustle24.vercel.app/api/bulk-email with header x-bulk-secret + {subject, html: body includes '<' ? body : <p>body</p>, text: body}. Parses text→JSON, error handling, displays `Sent ${j.sent}/${j.total} from ${j.from}` green or Failed red.
+
+10. api/bulk-email.js — VERCEL SERVERLESS (71 lines)
+----------------------------------------------------
+- Imports nodemailer 6.9.13.
+- Env vars needed in Vercel Dashboard: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (bypasses RLS), GMAIL_USER, GMAIL_APP_PASSWORD (16-char app password, spaces stripped), BULK_SECRET.
+- Handler: CORS * allow POST OPTIONS + x-bulk-secret, 405 if not POST, 401 if secret mismatch, 400 if missing subject, 500 if missing env.
+- Fetches contacts: GET SUPABASE_URL/rest/v1/joins?select=contact with service_role headers → rows → emails = dedup lowercased filtered by RFC regex /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/. 404 if empty.
+- Transporter nodemailer.createTransport service gmail auth user/pass.
+- Chunk emails 50 per batch (BCC limit), loops sendMail from GMAIL_USER to GMAIL_USER bcc batch subject html/text, sent counter, 502 on fail.
+- Returns 200 {ok:true,sent,total,from}.
+
+11. .github/workflows/bulk-email.yml — MANUAL BULK (55 lines)
+--------------------------------------------------------------
+- On workflow_dispatch inputs subject (string required) + body (HTML/plain). Job runs ubuntu-latest, setup-node 20, npm install nodemailer@6.9.13, then node -e inline script same fetch chunk sendMail as api, using secrets SUPABASE_URL/SERVICE_ROLE_KEY/GMAIL_USER/GMAIL_APP_PASSWORD + inputs SUBJECT/BODY env. Logs sent counts.
+
+12. style.css — GLOBAL (66 lines) + Per-Page Inline <style>
+-------------------------------------------------------------
+See tokens above. Per-page banners repeat same pattern; strong_people inline style defines all 5 banner containers + title hovers. vision etc rely on global header/grid/cards.
+
+13. script.js — SHARED (18 lines)
+----------------------------------
+- DOMContentLoaded addBlood(el): rAF-throttled mousemove → compute --x/--y percent relative to el rect → set style properties. Applied to #back and #join-form button. passive:true.
+
+14. RECENT FIXES CHANGELOG (Sept 2026)
+-------------------------------------
+A) Back button global persistence (strong_people.html):
+- Before: <button id="back">Back to landing</button> NESTED inside #vision-banner → matched CSS #vision-banner #back {position:absolute} → scrolled away after first  viewport (only visible on vision block). User: "stucked to the top ... available on entire page not just vision block, keeping same position".
+- After: Moved button to direct child of <body> before any banner → position:fixed (style.css:12-13) applies globally. Visual pos unchanged (left3vw top3vh) but persists across all 5 banners scroll. Commit ae461ce diff: - inside div, + before div.
+
+B) Hash-back navigation (vision/projects/members/competitions/tasks/join):
+- Before: all detail pages did window.location.href='strong_people.html' → browser loads top (vision).
+- After: hash anchors per banner → members→#scene, vision→#vision-banner, projects→#projects-banner, competitions/tasks→#competitions-banner, join→#join-banner. Enables native browser scroll to originating section on return. User report: "tapped Members and Back got me again on top instead of Members screen" — fixed via ae461ce. All 6 files updated grep verified.
+
+C) Rename (2026-09-23):
+- Before: strong_people button text "Back to landing"
+- After: "BACK" uppercase per request push ae461ce line 214.
+
+15. ROUTING FLOW
+---------------
+index.html (split)
+ ├─ click left → modal strong → Yeah → strong_people.html (hub) ─┬─ Vision banner → vision.html → Back → strong_people.html#vision-banner
+ │                                                               ├─ Projects → projects.html → #projects-banner
+ │                                                               ├─ Members → members.html → #scene
+ │                                                               ├─ Competitions → competitions.html/tasks.html → #competitions-banner
+ │                                                               └─ Join → join.html → #join-banner → form submit Supabase → admin bulk
+ └─ click right → modal weak → Yeah → weak_people.html → Back → index.html
+     Nope closes modal stays.
+
+16. DEPLOYMENT / HOW TO RUN
+--------------------------
+- No build, no npm worship for frontend: git clone + open index.html or python3 -m http.server 8000. Use laptop 1920×1080, mouse.
+- GitHub Pages: Settings → Pages Source main /(root) → https://sankalp75.github.io/FightClub/
+- Vercel: connects repo for /api/bulk-email.js, env vars set, package.json module required. Live at hustle24.vercel.app/api/bulk-email used by admin.html.
+- Supabase: project afdrdgtc..., table joins, anon insert policy. Data under 400KB images JPEG q80 cover blur10.
+- Git push flow: git add . commit "wake up" pull --rebase push origin main.
+
+17. ASSETS & CONSTRAINTS
+-----------------------
+- Images all 1920×1080 cover, blurred 10px, transforms scale. Don't use 4K PNG.
+- Fonts: FightThis.ttf only display. Fallbacks Arial Narrow sans-serif.
+- No responsiveness: mobile intentionally blocked.
+- Security: contact field blocks capitals (pattern + JS), Supabase anon key is low-privilege insert-only, bulk needs BULK_SECRET + service_role key server-side only. Admin secret stored localStorage.
+
+18. AI RECONSTRUCTION NOTES
+--------------------------
+To rebuild or understand without seeing site: remember 5-banner vertical scroll hub, fixed BACK top-left with cursor-origin blood, masking split landing, dead-zone 48px, modal blur filters, hash-preserved back, Supabase joins flow, Gmail BCC chunk 50, mobile gate overlay. Reproduce exact ids: vision-banner, projects-banner, scene (Members), competitions-banner, join-banner, title, vision-title, projects-title, join-title, competitions-title. Copy styles verbatim for fidelity; JS must include rAF throttling and --x/--y variables for blood effect.
+
+END — Use this plus reading actual HTML/CSS/JS files to answer any question about layout, routing, or integration.

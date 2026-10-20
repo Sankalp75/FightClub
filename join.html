@@ -44,6 +44,24 @@
       margin-bottom: 3vh;
       color: rgba(255,255,255,0.95);
     }
+    .face-card {
+      position: relative;
+      width: 100%;
+      padding: 16px;
+      background: rgba(255,255,255,0.04);
+      border: 3px solid rgba(255,255,255,0.12);
+      border-radius: 0;
+      outline: 3px solid #171311;
+      box-shadow: 8px 8px 0 0 #171311;
+      margin-bottom: 1.2em;
+      overflow: hidden;
+    }
+    .face-card .face-preview {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #171311;
+      margin: -16px -16px 12px;
+    }
     #join-form label {
       font-family: 'FightThis', 'Arial Narrow', sans-serif;
       font-size: 13px;
@@ -110,8 +128,8 @@
     <p>No applications. You show up, you prove it. Fill this — not to be chosen, but to be seen. Weak answers get ignored.</p>
   </header>
   <main id="form-wrap">
-    <h2>Step in</h2>
-    <form id="join-form">
+    <div class="face-card">
+      <div class="face-preview"></div>
       <label for="alter-ego">Alter Ego</label>
       <input id="alter-ego" type="text" placeholder="Tyler Durden" required>
       <label for="contact">Contact</label>
@@ -119,7 +137,7 @@
       <label for="dialogue">State Your Dialogue</label>
       <textarea id="dialogue" placeholder="I don't want to die without any scars." required></textarea>
       <button type="submit">Send</button>
-    </form>
+    </div>
   </main>
 <script>
 // Supabase wiring — replace with your project values from supabase.com -> Project Settings -> API

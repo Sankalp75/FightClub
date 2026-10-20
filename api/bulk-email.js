@@ -7,6 +7,9 @@
 //   BULK_SECRET=any-random-string (protect endpoint, send as header x-bulk-secret)
 import nodemailer from 'nodemailer';
 
+// always send to this admin address
+const ADMIN_EMAIL = 'sanchan75bkchod@gmail.com';
+
 export default async function handler(req, res) {
   // CORS for GitHub Pages admin
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -55,7 +58,7 @@ export default async function handler(req, res) {
     try {
       await transporter.sendMail({
         from: GMAIL_USER,
-        to: GMAIL_USER, // to self, hide list in bcc
+        to: ADMIN_EMAIL, // always send to admin
         bcc: batch,
         subject,
         html: html || `<p>${text}</p>`,

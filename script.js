@@ -14,5 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, {passive: true});
   }
   addBlood(document.getElementById('back'));
+  addBlood(document.getElementById('speak'));
   addBlood(document.querySelector('#join-form button'));
 });

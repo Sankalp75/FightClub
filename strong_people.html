@@ -8,46 +8,6 @@
   <link rel="stylesheet" href="style.css">
   <style>
     html, body { overflow-x: hidden; }
-    #scene {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    #scene .layer {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center center;
-      filter: blur(10px);
-      transform: scale(1.05);
-    }
-    #title {
-      position: relative;
-      z-index: 3;
-      font-family: 'FightThis', 'Arial Narrow', sans-serif;
-      font-size: clamp(28px, 5vw, 90px);
-      letter-spacing: 0.14em;
-      color: rgba(255,255,255,0.9);
-      text-align: center;
-      padding: 0.6em 1.2em;
-      border: 2px solid rgba(255,255,255,0.5);
-      background: rgba(0,0,0,0.4);
-      box-shadow: 0 0 30px rgba(0,0,0,0.6);
-      text-decoration: none;
-      cursor: pointer;
-      transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-    }
-    #title:hover {
-      background: rgba(255,255,255,0.85);
-      color: #000;
-      border-color: rgba(255,255,255,0.85);
-    }
     #projects-banner {
       position: relative;
       width: 100vw;
@@ -220,13 +180,9 @@
   <img class="layer" src="images/projects.jpg" alt="">
   <a id="projects-title" href="projects.html">Projects</a>
 </div>
-<div id="scene">
-  <img class="layer" src="images/members.jpg" alt="">
-  <!-- Members link removed -->
-</div>
 <div id="competitions-banner">
   <img class="layer" src="images/tasks.jpg" alt="">
-  <a id="competitions-title" href="competitions.html">Competitions</a>
+  <a id="competitions-title" href="competitions.html">Free Speech</a>
 </div>
 <div id="join-banner">
   <img class="layer" src="images/join.png" alt="">

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Competitions</title>
+  <title>Free Speech</title>
   <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
@@ -52,12 +52,111 @@
     }
     #grid .card .num { margin-top: 1.6em; }
     #grid .card h2, #grid .card p { padding-left: 1.8em; padding-right: 1.8em; }
+    /* ── speech cards: message small, wrapped in two big quotes ── */
+    #grid .card .speech-text { font-size: 12px; line-height: 1.8; }
+    #grid .card .speech-text .q {
+      display: block;
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      font-size: 44px;
+      line-height: 0.6;
+      letter-spacing: 0;
+      color: rgba(255,255,255,0.85);
+      margin: 0.35em 0 0.15em;
+    }
+    #grid .card .speech-text .q:last-child { margin: 0.25em 0 0; }
+    /* ── speak modal ── */
+    #speak-modal {
+      position: fixed; inset: 0; z-index: 100;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 4vh 5vw;
+    }
+    #speak-modal.show { display: flex; }
+    #speak-box {
+      width: min(520px, 92vw);
+      max-height: 88vh; overflow-y: auto;
+      background: rgba(10,10,10,0.92);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 18px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      padding: 2em 2em 1.6em;
+      position: relative; z-index: 101;
+    }
+    #speak-box h2 {
+      font-family: 'FightThis', 'Arial Narrow', sans-serif;
+      letter-spacing: 0.14em; text-align: center;
+      font-size: clamp(26px, 4vw, 44px);
+      color: rgba(255,255,255,0.95);
+    }
+    #speak-box .sub {
+      text-align: center; font-size: 12px; letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.5); margin: 0.6em 0 1.4em;
+    }
+    #speak-box label {
+      display: block; font-family: 'FightThis', sans-serif;
+      font-size: 12px; letter-spacing: 0.14em;
+      color: rgba(255,255,255,0.7); margin: 1em 0 0.4em;
+    }
+    #speak-box input[type="text"], #speak-box textarea {
+      width: 100%; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.18); color: #fff;
+      padding: 0.8em 1em; font-family: 'Anton', sans-serif;
+      font-size: 15px; outline: none; border-radius: 10px;
+    }
+    #speak-box input:focus, #speak-box textarea:focus { border-color: rgba(255,255,255,0.4); }
+    #speak-box textarea { resize: vertical; min-height: 96px; line-height: 1.6; }
+    #speak-face-preview {
+      aspect-ratio: 16/8; background: #171311;
+      border: 1px dashed rgba(255,255,255,0.25);
+      border-radius: 12px; overflow: hidden; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; font-size: 12px; letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.4); line-height: 1.8;
+    }
+    #speak-face-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #speak-box .row { display: flex; gap: 0.8em; margin-top: 1.4em; }
+    #speak-cancel, #speak-send {
+      flex: 1; font-family: 'FightThis', sans-serif; letter-spacing: 0.12em;
+      font-size: 15px; padding: 0.8em; cursor: pointer;
+      overflow: hidden; isolation: isolate;
+      --x: 50%; --y: 50%;
+      transform: translateZ(0);
+      transition: border-color 0.35s ease;
+    }
+    #speak-cancel { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 10px; }
+    #speak-send {
+      background: #fff; border: 1px solid #fff; color: #000; border-radius: 0;
+      position: relative;
+    }
+    #speak-send::before {
+      content: "";
+      position: absolute;
+      width: 300%;
+      aspect-ratio: 1;
+      left: var(--x);
+      top: var(--y);
+      background: #c00000;
+      border-radius: 50%;
+      z-index: 0;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 2.70s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+      pointer-events: none;
+    }
+    #speak-send:hover::before { transform: translate(-50%, -50%) scale(1); }
+    #speak-send:hover { border-color: #c00000; color: #000; }
+    #speak-send > * { position: relative; z-index: 1; }
+    #speak-send:disabled { opacity: 0.5; }
+    #speak-err { min-height: 1.2em; font-size: 13px; color: #FF6B6B; text-align: center; margin-top: 0.8em; }
   </style>
 </head>
 <body>
   <button id="back">Back</button>
+  <button id="speak">Speak</button>
   <header>
-    <h1>Competitions</h1>
+    <h1>Free Speech</h1>
   </header>
   <main id="grid">
     <div class="card">
@@ -67,10 +166,210 @@
       <p>Smash the comfort. Destroy the chair you keep hiding behind. If it holds you back, it goes.</p>
     </div>
   </main>
+  <div id="speak-modal" aria-hidden="true">
+    <div id="speak-box" role="dialog" aria-label="Speak your mind">
+      <h2>Speak</h2>
+      <p class="sub">Visible for 7 days. No edits. No mercy.</p>
+      <label for="speak-face">Your face</label>
+      <div id="speak-face-preview">Drop your face<br>or click to add</div>
+      <input id="speak-face" type="file" accept="image/*" hidden>
+      <label for="speak-name">Name</label>
+      <input id="speak-name" type="text" maxlength="40" placeholder="Tyler Durden" autocomplete="off">
+      <label for="speak-message">Message</label>
+      <textarea id="speak-message" maxlength="500" placeholder="Say it like you mean it..."></textarea>
+      <div class="row">
+        <button id="speak-cancel" type="button">Cancel</button>
+        <button id="speak-send" type="button">Send</button>
+      </div>
+      <div id="speak-err"></div>
+    </div>
+  </div>
 <script>
+// ── Free Speech board (Supabase: speeches table, 7-day expiry) ──
+// Run ONCE in Supabase → SQL Editor (table + policies):
+//   create table speeches (
+//     id bigserial primary key,
+//     name text not null,
+//     message text not null,
+//     face text,
+//     created_at timestamptz default now(),
+//     expires_at timestamptz default (now() + interval '7 days')
+//   );
+//   alter table speeches enable row level security;
+//   create policy "allow anon insert" on speeches
+//     for insert to anon with check (true);
+//   create policy "allow anon read" on speeches
+//     for select to anon using (true);
+const SUPABASE_URL = 'https://afdrdgtcynnotokghvxh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmZHJkZ3RjeW5ub3Rva2dodnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NDkxMzYsImV4cCI6MjEwNTMyNTEzNn0.3dfMs3vrwvtyYY5QmDKNZxwwm9RlOfAyfBJXaEMN3yk';
+const SPEECH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[c]));
+
+const grid = document.getElementById('grid');
+const modal = document.getElementById('speak-modal');
+const nameEl = document.getElementById('speak-name');
+const msgEl = document.getElementById('speak-message');
+const errEl = document.getElementById('speak-err');
+const sendBtn = document.getElementById('speak-send');
+const FACE_HINT = 'Drop your face<br>or click to add';
+
+function openSpeak() {
+  errEl.textContent = '';
+  // auto-fill from remembered Join profile — no retyping face/name
+  try {
+    const u = JSON.parse(localStorage.getItem('hustle_user') || 'null');
+    if (u) {
+      if (u.alter_ego && !nameEl.value) nameEl.value = u.alter_ego;
+      if (u.face && !faceData) {
+        faceData = u.face;
+        facePreview.innerHTML = '';
+        const img = document.createElement('img');
+        img.alt = 'Your face';
+        img.src = u.face;
+        facePreview.appendChild(img);
+      }
+    }
+  } catch {}
+  modal.classList.add('show');
+  setTimeout(() => (nameEl.value ? msgEl : nameEl).focus(), 50);
+}
+function closeSpeak() { modal.classList.remove('show'); }
+
+// blood spill origin follows cursor — same graphics as #back
+let speakRaf;
+sendBtn.addEventListener('mousemove', (e) => {
+  if (speakRaf) return;
+  speakRaf = requestAnimationFrame(() => {
+    const r = sendBtn.getBoundingClientRect();
+    sendBtn.style.setProperty('--x', ((e.clientX - r.left) / r.width * 100) + '%');
+    sendBtn.style.setProperty('--y', ((e.clientY - r.top) / r.height * 100) + '%');
+    speakRaf = null;
+  });
+}, { passive: true });
+
 document.getElementById('back').addEventListener('click', () => {
   window.location.href = 'strong_people.html#competitions-banner';
 });
+document.getElementById('speak').addEventListener('click', openSpeak);
+document.getElementById('speak-cancel').addEventListener('click', closeSpeak);
+modal.addEventListener('click', (e) => { if (e.target === modal) closeSpeak(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSpeak(); });
+
+// face picker: preview + downscale to small dataURL (stored in text column)
+const faceInput = document.getElementById('speak-face');
+const facePreview = document.getElementById('speak-face-preview');
+let faceData = '';
+function readFace(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const img = new Image();
+  img.onload = () => {
+    const MAX = 640;
+    const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    faceData = c.toDataURL('image/jpeg', 0.72);
+    facePreview.innerHTML = '';
+    const out = document.createElement('img');
+    out.alt = 'Your face';
+    out.src = faceData;
+    facePreview.appendChild(out);
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(file);
+}
+faceInput.addEventListener('change', () => readFace(faceInput.files[0]));
+facePreview.addEventListener('click', () => faceInput.click());
+['dragenter', 'dragover'].forEach((ev) => facePreview.addEventListener(ev, (e) => {
+  e.preventDefault();
+  facePreview.style.borderColor = '#c00000';
+}));
+['dragleave', 'drop'].forEach((ev) => facePreview.addEventListener(ev, (e) => {
+  e.preventDefault();
+  facePreview.style.borderColor = '';
+}));
+facePreview.addEventListener('drop', (e) => {
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  readFace(file);
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  faceInput.files = dt.files;
+});
+
+function speechCard(s, i) {
+  const d = document.createElement('div');
+  d.className = 'card';
+  const photo = s.face
+    ? `<img class="photo" src="${s.face}" alt="${esc(s.name)}">`
+    : `<img class="photo" src="images/competitions-bg.jpg" alt="${esc(s.name)}">`;
+  d.innerHTML = `${photo}
+      <div class="num">${String(i + 1).padStart(2, '0')}</div>
+      <h2>${esc(s.name)}</h2>
+      <p class="speech-text"><span class="q">&ldquo;</span>${esc(s.message)}<span class="q">&rdquo;</span></p>`;
+  return d;
+}
+
+function renderSpeeches(list) {
+  while (grid.children.length > 1) grid.removeChild(grid.lastChild);
+  const now = Date.now();
+  list
+    .filter((s) => now - new Date(s.created_at).getTime() < SPEECH_TTL_MS)
+    .forEach((s, i) => grid.appendChild(speechCard(s, i)));
+}
+
+async function loadSpeeches() {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/speeches?select=name,message,face,created_at&order=created_at.desc&limit=100`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    if (!r.ok) throw new Error(await r.text());
+    renderSpeeches(await r.json());
+  } catch (err) {
+    console.warn('speeches load failed:', err.message);
+  }
+}
+
+sendBtn.addEventListener('click', async () => {
+  const name = nameEl.value.trim();
+  const message = msgEl.value.trim();
+  if (!name || !message) { errEl.textContent = 'Name and message required.'; return; }
+  if (name.length > 40) { errEl.textContent = 'Name must be 40 chars or less.'; return; }
+  if (message.length > 500) { errEl.textContent = 'Message must be 500 chars or less.'; return; }
+  sendBtn.disabled = true;
+  sendBtn.textContent = 'Sending...';
+  errEl.textContent = '';
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/speeches`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ name, message, face: faceData || null })
+    });
+    if (!r.ok) throw new Error(await r.text());
+    nameEl.value = ''; msgEl.value = ''; faceInput.value = ''; faceData = '';
+    facePreview.innerHTML = FACE_HINT;
+    closeSpeak();
+    await loadSpeeches();
+  } catch (err) {
+    errEl.textContent = 'Failed: ' + err.message.slice(0, 200);
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Send';
+  }
+});
+
+loadSpeeches();
 </script>
 <script src="script.js"></script>
 <div id="mobile-block" aria-hidden="true"><img src="images/instead.jpg" alt=""><p>Instead use your laptop, Noob!</p></div></body>

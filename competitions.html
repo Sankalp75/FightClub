@@ -159,12 +159,6 @@
     <h1>Free Speech</h1>
   </header>
   <main id="grid">
-    <div class="card">
-      <img class="photo" src="images/competitions-bg.jpg" alt="Break">
-      <div class="num">01</div>
-      <h2>Break</h2>
-      <p>Smash the comfort. Destroy the chair you keep hiding behind. If it holds you back, it goes.</p>
-    </div>
   </main>
   <div id="speak-modal" aria-hidden="true">
     <div id="speak-box" role="dialog" aria-label="Speak your mind">
@@ -316,7 +310,7 @@ function speechCard(s, i) {
 }
 
 function renderSpeeches(list) {
-  while (grid.children.length > 1) grid.removeChild(grid.lastChild);
+  grid.replaceChildren();
   const now = Date.now();
   list
     .filter((s) => now - new Date(s.created_at).getTime() < SPEECH_TTL_MS)

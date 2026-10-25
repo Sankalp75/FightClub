@@ -73,7 +73,6 @@
     <h1>Vision</h1>
   </header>
   <main id="grid">
-    <div class="card"><img class="photo" src="images/vision-bg.jpg" alt="Awake"><div class="num">01</div><h2>Awake</h2><p>"See the lie. The job, the debt, the feed — all anesthesia. Wake up or stay numb."</p></div>
   </main>
   <div id="add-modal" aria-hidden="true">
     <div id="add-box" role="dialog" aria-label="Add your vision">
@@ -223,7 +222,7 @@ function visionCard(s, i) {
   return d;
 }
 function renderVisions(list) {
-  while (grid.children.length > 1) grid.removeChild(grid.lastChild);
+  grid.replaceChildren();
   const now = Date.now();
   list
     .filter((s) => now - new Date(s.created_at).getTime() < VISION_TTL_MS)

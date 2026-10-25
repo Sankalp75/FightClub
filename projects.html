@@ -74,17 +74,21 @@
     }
     #grid .card .repo:hover { color: #c00000; border-color: #c00000; }
     #grid .card { position: relative; }
-    .edit-btn {
+    .card-actions {
       position: absolute; top: 10px; right: 10px; z-index: 2;
+      display: flex; gap: 0.4em;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+    }
+    #grid .card:hover .card-actions, .card-actions:focus-within { opacity: 1; pointer-events: auto; }
+    .card-actions button {
       font-family: 'FightThis', sans-serif; font-size: 12px; letter-spacing: 0.14em;
       padding: 0.5em 0.9em; cursor: pointer;
       background: rgba(0,0,0,0.72); color: #fff;
       border: 1px solid rgba(255,255,255,0.3); border-radius: 999px;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.2s ease, border-color 0.3s ease;
+      transition: border-color 0.3s ease, color 0.3s ease;
     }
-    #grid .card:hover .edit-btn, .edit-btn:focus-visible { opacity: 1; pointer-events: auto; }
-    .edit-btn:hover { border-color: #c00000; color: #c00000; }
+    .card-actions .edit-btn:hover { border-color: #c00000; color: #c00000; }
+    .card-actions .delete-btn:hover { border-color: #ff6b6b; color: #ff6b6b; }
   </style>
 </head>
 <body>
@@ -153,10 +157,13 @@
 //   create policy "allow owner update" on projects for update to anon
 //     using (owner_token = coalesce(current_setting('request.headers', true)::json->>'x-owner-token', ''))
 //     with check (owner_token = coalesce(current_setting('request.headers', true)::json->>'x-owner-token', ''));
+//   create policy "allow owner delete" on projects for delete to anon
+//     using (owner_token = coalesce(current_setting('request.headers', true)::json->>'x-owner-token', ''));
 //   revoke select on public.projects from anon;
 //   grant select (id, author, title, status, description, repo, face, owner_tag, created_at) on public.projects to anon;
 //   grant insert on public.projects to anon;
 //   grant update (author, title, status, description, repo, face) on public.projects to anon;
+//   grant delete on public.projects to anon;
 //   grant usage on sequence public.projects_id_seq to anon;
 const SUPABASE_URL = 'https://afdrdgtcynnotokghvxh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmZHJkZ3RjeW5ub3Rva2dodnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NDkxMzYsImV4cCI6MjEwNTMyNTEzNn0.3dfMs3vrwvtyYY5QmDKNZxwwm9RlOfAyfBJXaEMN3yk';
@@ -314,15 +321,52 @@ function projectCard(p, i, tag) {
         <a class="repo" href="${esc(p.repo)}" target="_blank" rel="noopener noreferrer">${esc(repoLabel)}</a>
       </div>`;
   if (tag && p.owner_tag === tag) {
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+
     const edit = document.createElement('button');
     edit.type = 'button';
     edit.className = 'edit-btn';
     edit.textContent = 'Edit';
     edit.setAttribute('aria-label', `Edit ${p.title}`);
     edit.addEventListener('click', () => openEdit(p));
-    d.appendChild(edit);
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'delete-btn';
+    del.textContent = 'Delete';
+    del.setAttribute('aria-label', `Delete ${p.title}`);
+    del.addEventListener('click', () => deleteProject(p));
+
+    actions.append(edit, del);
+    d.appendChild(actions);
   }
   return d;
+}
+async function deleteProject(p) {
+  if (!confirm(`Delete "${p.title}"? This cannot be undone.`)) return;
+  try {
+    const keys = await ownerKeys();
+    if (!keys) throw new Error('Log in on the Join page first.');
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/projects?id=eq.${encodeURIComponent(p.id)}&select=id`,
+      {
+        method: 'DELETE',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'x-owner-token': keys.token,
+          Prefer: 'return=representation'
+        }
+      }
+    );
+    if (!r.ok) throw new Error(await r.text());
+    const rows = await r.json();
+    if (!rows.length) throw new Error('Not allowed to delete this project.');
+    await loadProjects();
+  } catch (err) {
+    alert('Failed: ' + err.message.slice(0, 200));
+  }
 }
 async function loadProjects() {
   try {

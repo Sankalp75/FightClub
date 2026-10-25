@@ -73,26 +73,35 @@
       text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.25);
     }
     #grid .card .repo:hover { color: #c00000; border-color: #c00000; }
+    #grid .card { position: relative; }
+    .edit-btn {
+      position: absolute; top: 10px; right: 10px; z-index: 2;
+      font-family: 'FightThis', sans-serif; font-size: 12px; letter-spacing: 0.14em;
+      padding: 0.5em 0.9em; cursor: pointer;
+      background: rgba(0,0,0,0.72); color: #fff;
+      border: 1px solid rgba(255,255,255,0.3); border-radius: 999px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease, border-color 0.3s ease;
+    }
+    #grid .card:hover .edit-btn, .edit-btn:focus-visible { opacity: 1; pointer-events: auto; }
+    .edit-btn:hover { border-color: #c00000; color: #c00000; }
   </style>
 </head>
 <body>
   <button id="back">Back</button>
-  <button id="add-btn">Add</button>
+  <button id="add-btn">Cheers</button>
   <header>
     <h1>Projects</h1>
   </header>
   <main id="grid">
-    <div class="card">
-      <img class="photo" src="images/projects-bg.jpg" alt="Fight Soap">
-      <div class="num">01</div>
-      <h2>Fight Soap</h2>
-      <p>Our first product. Made with intent, not for comfort — for remembering who you are.</p>
-    </div>
   </main>
   <div id="add-modal" aria-hidden="true">
     <div id="add-box" role="dialog" aria-label="Add your project">
-      <h2>Add</h2>
+      <h2 id="add-heading">Cheers</h2>
       <p class="sub">One line. One link. No fluff.</p>
+      <label for="add-face">Project image</label>
+      <div id="add-face-preview">Drop an image<br>or click to add</div>
+      <input id="add-face" type="file" accept="image/*" hidden>
       <label for="add-author">Author</label>
       <input id="add-author" type="text" maxlength="40" placeholder="Your name" autocomplete="off">
       <label for="add-title">Project Title</label>
@@ -125,16 +134,29 @@
 //     status text not null check (status in ('completed', 'in progress', 'locked')),
 //     description text not null,
 //     repo text not null,
+//     face text,
+//     owner_token text not null default '', -- sha256(contact + dialogue), kept private
+//     owner_tag text not null default '',   -- sha256(owner_token), public "is mine" marker
 //     created_at timestamptz default now()
 //   );
-//   -- existing table from before the title column:
+//   -- existing table from before the face/title/owner columns:
 //   alter table projects add column if not exists title text not null default '';
+//   alter table projects add column if not exists face text;
+//   alter table projects add column if not exists owner_token text not null default '';
+//   alter table projects add column if not exists owner_tag text not null default '';
 //   alter table projects enable row level security;
 //   create policy "allow anon insert" on projects
 //     for insert to anon with check (true);
 //   create policy "allow anon read" on projects
 //     for select to anon using (true);
-//   grant select, insert on public.projects to anon;
+//   -- ownership: only the logged-in author's token may update
+//   create policy "allow owner update" on projects for update to anon
+//     using (owner_token = coalesce(current_setting('request.headers', true)::json->>'x-owner-token', ''))
+//     with check (owner_token = coalesce(current_setting('request.headers', true)::json->>'x-owner-token', ''));
+//   revoke select on public.projects from anon;
+//   grant select (id, author, title, status, description, repo, face, owner_tag, created_at) on public.projects to anon;
+//   grant insert on public.projects to anon;
+//   grant update (author, title, status, description, repo, face) on public.projects to anon;
 //   grant usage on sequence public.projects_id_seq to anon;
 const SUPABASE_URL = 'https://afdrdgtcynnotokghvxh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmZHJkZ3RjeW5ub3Rva2dodnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NDkxMzYsImV4cCI6MjEwNTMyNTEzNn0.3dfMs3vrwvtyYY5QmDKNZxwwm9RlOfAyfBJXaEMN3yk';
@@ -152,15 +174,69 @@ const descEl = document.getElementById('add-desc');
 const repoEl = document.getElementById('add-repo');
 const errEl = document.getElementById('add-err');
 const sendBtn = document.getElementById('add-send');
+const headingEl = document.getElementById('add-heading');
+const faceInput = document.getElementById('add-face');
+const facePreview = document.getElementById('add-face-preview');
+const FACE_HINT = 'Drop an image<br>or click to add';
+let faceData = '';
 
+// Ownership is the login itself: the same contact + dialogue used on /join
+// hashes into the owner key stored on the project. `owner_token` is the
+// private bearer value the RLS policy checks; `owner_tag` is a public
+// hash-of-hash used only to show Edit on the cards you own.
+let editingId = null;
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('hustle_user') || 'null'); } catch { return null; }
+}
+async function sha256(s) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+async function ownerKeys() {
+  const u = getUser();
+  if (!u || !u.contact || !u.dialogue) return null;
+  const token = await sha256(`fightclub:${u.contact}\n${u.dialogue}`);
+  return { token, tag: await sha256(`tag:${token}`) };
+}
+
+function showFace() {
+  facePreview.innerHTML = '';
+  if (!faceData) { facePreview.innerHTML = FACE_HINT; return; }
+  const img = document.createElement('img');
+  img.alt = 'Project image';
+  img.src = faceData;
+  facePreview.appendChild(img);
+}
+function resetForm() {
+  authorEl.value = ''; titleEl.value = ''; statusEl.value = ''; descEl.value = ''; repoEl.value = '';
+  faceInput.value = ''; faceData = ''; facePreview.innerHTML = FACE_HINT;
+}
 function openAdd() {
+  editingId = null;
+  resetForm();
   errEl.textContent = '';
-  try {
-    const u = JSON.parse(localStorage.getItem('hustle_user') || 'null');
-    if (u && u.alter_ego && !authorEl.value) authorEl.value = u.alter_ego;
-  } catch {}
+  headingEl.textContent = 'Cheers';
+  sendBtn.textContent = 'Send';
+  const u = getUser();
+  if (u && u.alter_ego) authorEl.value = u.alter_ego;
   modal.classList.add('show');
   setTimeout(() => (authorEl.value ? titleEl : authorEl).focus(), 50);
+}
+function openEdit(p) {
+  editingId = String(p.id);
+  resetForm();
+  errEl.textContent = '';
+  headingEl.textContent = 'Edit';
+  sendBtn.textContent = 'Save';
+  authorEl.value = p.author;
+  titleEl.value = p.title;
+  statusEl.value = p.status;
+  descEl.value = p.description;
+  repoEl.value = p.repo;
+  faceData = p.face || '';
+  showFace();
+  modal.classList.add('show');
+  setTimeout(() => titleEl.focus(), 50);
 }
 function closeAdd() { modal.classList.remove('show'); }
 
@@ -181,13 +257,54 @@ document.getElementById('add-cancel').addEventListener('click', closeAdd);
 modal.addEventListener('click', (e) => { if (e.target === modal) closeAdd(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAdd(); });
 
-function projectCard(p, i) {
+// image picker: preview + downscale to small dataURL (stored in text column)
+function readFace(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const img = new Image();
+  img.onload = () => {
+    const MAX = 640;
+    const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    faceData = c.toDataURL('image/jpeg', 0.72);
+    facePreview.innerHTML = '';
+    const out = document.createElement('img');
+    out.alt = 'Project image';
+    out.src = faceData;
+    facePreview.appendChild(out);
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(file);
+}
+faceInput.addEventListener('change', () => readFace(faceInput.files[0]));
+facePreview.addEventListener('click', () => faceInput.click());
+['dragenter', 'dragover'].forEach((ev) => facePreview.addEventListener(ev, (e) => {
+  e.preventDefault();
+  facePreview.style.borderColor = '#c00000';
+}));
+['dragleave', 'drop'].forEach((ev) => facePreview.addEventListener(ev, (e) => {
+  e.preventDefault();
+  facePreview.style.borderColor = '';
+}));
+facePreview.addEventListener('drop', (e) => {
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  readFace(file);
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  faceInput.files = dt.files;
+});
+
+function projectCard(p, i, tag) {
   const d = document.createElement('div');
   d.className = 'card';
   d.dataset.live = '';
   const repoLabel = p.repo.replace(/^https?:\/\/(www\.)?github\.com\//i, '');
   const statusClass = p.status.replace(/\s+/g, '-');
-  d.innerHTML = `<img class="photo" src="images/projects-bg.jpg" alt="${esc(p.title)}">
+  d.innerHTML = `<img class="photo" src="${p.face || 'images/projects-bg.jpg'}" alt="${esc(p.title)}">
       <div class="num">${String(i + 1).padStart(2, '0')}</div>
       <h2>${esc(p.title)}</h2>
       <div class="by">By ${esc(p.author)}</div>
@@ -196,19 +313,29 @@ function projectCard(p, i) {
         <span class="status ${statusClass}">${esc(p.status)}</span>
         <a class="repo" href="${esc(p.repo)}" target="_blank" rel="noopener noreferrer">${esc(repoLabel)}</a>
       </div>`;
+  if (tag && p.owner_tag === tag) {
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.className = 'edit-btn';
+    edit.textContent = 'Edit';
+    edit.setAttribute('aria-label', `Edit ${p.title}`);
+    edit.addEventListener('click', () => openEdit(p));
+    d.appendChild(edit);
+  }
   return d;
 }
 async function loadProjects() {
   try {
+    const keys = await ownerKeys();
     const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/projects?select=author,title,status,description,repo,created_at&order=created_at.desc&limit=100`,
+      `${SUPABASE_URL}/rest/v1/projects?select=id,author,title,status,description,repo,face,owner_tag,created_at&order=created_at.desc&limit=100`,
       { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
     );
     if (!r.ok) throw new Error(await r.text());
     const list = await r.json();
     grid.querySelectorAll('[data-live]').forEach((el) => el.remove());
     const start = grid.children.length;
-    list.forEach((p, i) => grid.appendChild(projectCard(p, start + i)));
+    list.forEach((p, i) => grid.appendChild(projectCard(p, start + i, keys && keys.tag)));
   } catch (err) {
     console.warn('projects load failed:', err.message);
   }
@@ -228,29 +355,43 @@ sendBtn.addEventListener('click', async () => {
     const u = new URL(repo);
     if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error();
   } catch { errEl.textContent = 'Enter a valid repo URL.'; return; }
+  const isEdit = editingId !== null;
   sendBtn.disabled = true;
-  sendBtn.textContent = 'Sending...';
+  sendBtn.textContent = isEdit ? 'Saving...' : 'Sending...';
   errEl.textContent = '';
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/projects`, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal'
-      },
-      body: JSON.stringify({ author, title, status, description, repo })
-    });
+    const keys = await ownerKeys();
+    if (!keys) throw new Error('Log in on the Join page first.');
+    const body = { author, title, status, description, repo, face: faceData || null };
+    if (!isEdit) { body.owner_token = keys.token; body.owner_tag = keys.tag; }
+    const r = await fetch(
+      isEdit
+        ? `${SUPABASE_URL}/rest/v1/projects?id=eq.${encodeURIComponent(editingId)}&select=id`
+        : `${SUPABASE_URL}/rest/v1/projects?select=id`,
+      {
+        method: isEdit ? 'PATCH' : 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          'x-owner-token': keys.token,
+          Prefer: 'return=representation'
+        },
+        body: JSON.stringify(body)
+      }
+    );
     if (!r.ok) throw new Error(await r.text());
-    authorEl.value = ''; titleEl.value = ''; statusEl.value = ''; descEl.value = ''; repoEl.value = '';
+    const rows = await r.json();
+    if (isEdit && !rows.length) throw new Error('Not allowed to edit this project.');
+    resetForm();
+    editingId = null;
     closeAdd();
     await loadProjects();
   } catch (err) {
     errEl.textContent = 'Failed: ' + err.message.slice(0, 200);
   } finally {
     sendBtn.disabled = false;
-    sendBtn.textContent = 'Send';
+    sendBtn.textContent = editingId ? 'Save' : 'Send';
   }
 });
 loadProjects();

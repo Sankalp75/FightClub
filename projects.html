@@ -52,10 +52,28 @@
     }
     #grid .card .num { margin-top: 1.6em; }
     #grid .card h2, #grid .card p { padding-left: 1.8em; padding-right: 1.8em; }
+    #grid .card .meta {
+      display: flex; justify-content: center; align-items: center; gap: 0.9em;
+      margin-top: 1.2em; padding: 0 1.8em;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    #grid .card .status {
+      border: 1px solid rgba(255,255,255,0.25); border-radius: 999px;
+      padding: 0.35em 0.8em; color: rgba(255,255,255,0.6);
+    }
+    #grid .card .status.completed { color: #8fe08f; border-color: rgba(143,224,143,0.4); }
+    #grid .card .status.in-progress { color: #ffcf6b; border-color: rgba(255,207,107,0.4); }
+    #grid .card .status.locked { color: rgba(255,255,255,0.35); }
+    #grid .card .repo {
+      font-family: 'FightThis', sans-serif; color: rgba(255,255,255,0.55);
+      text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.25);
+    }
+    #grid .card .repo:hover { color: #c00000; border-color: #c00000; }
   </style>
 </head>
 <body>
   <button id="back">Back</button>
+  <button id="add-btn">Add</button>
   <header>
     <h1>Projects</h1>
   </header>
@@ -67,6 +85,163 @@
       <p>Our first product. Made with intent, not for comfort — for remembering who you are.</p>
     </div>
   </main>
+  <div id="add-modal" aria-hidden="true">
+    <div id="add-box" role="dialog" aria-label="Add your project">
+      <h2>Add</h2>
+      <p class="sub">One line. One link. No fluff.</p>
+      <label for="add-author">Author</label>
+      <input id="add-author" type="text" maxlength="40" placeholder="Your name" autocomplete="off">
+      <label for="add-status">Status</label>
+      <select id="add-status">
+        <option value="" selected disabled>Select status</option>
+        <option value="completed">Completed</option>
+        <option value="in progress">In progress</option>
+        <option value="locked">Locked</option>
+      </select>
+      <label for="add-desc">Description</label>
+      <textarea id="add-desc" maxlength="140" placeholder="One line on why this matters."></textarea>
+      <label for="add-repo">GitHub Repo</label>
+      <input id="add-repo" type="text" maxlength="200" placeholder="https://github.com/you/repo" autocomplete="off">
+      <div class="row">
+        <button id="add-cancel" type="button">Cancel</button>
+        <button id="add-send" type="button">Send</button>
+      </div>
+      <div id="add-err"></div>
+    </div>
+  </div>
+<script>
+// ── Projects board (Supabase: projects table) ──
+// Run ONCE in Supabase → SQL Editor (table + policies):
+//   create table projects (
+//     id bigserial primary key,
+//     author text not null,
+//     status text not null check (status in ('completed', 'in progress', 'locked')),
+//     description text not null,
+//     repo text not null,
+//     created_at timestamptz default now()
+//   );
+//   alter table projects enable row level security;
+//   create policy "allow anon insert" on projects
+//     for insert to anon with check (true);
+//   create policy "allow anon read" on projects
+//     for select to anon using (true);
+//   grant select, insert on public.projects to anon;
+//   grant usage on sequence public.projects_id_seq to anon;
+const SUPABASE_URL = 'https://afdrdgtcynnotokghvxh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmZHJkZ3RjeW5ub3Rva2dodnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NDkxMzYsImV4cCI6MjEwNTMyNTEzNn0.3dfMs3vrwvtyYY5QmDKNZxwwm9RlOfAyfBJXaEMN3yk';
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[c]));
+
+const grid = document.getElementById('grid');
+const modal = document.getElementById('add-modal');
+const authorEl = document.getElementById('add-author');
+const statusEl = document.getElementById('add-status');
+const descEl = document.getElementById('add-desc');
+const repoEl = document.getElementById('add-repo');
+const errEl = document.getElementById('add-err');
+const sendBtn = document.getElementById('add-send');
+
+function openAdd() {
+  errEl.textContent = '';
+  try {
+    const u = JSON.parse(localStorage.getItem('hustle_user') || 'null');
+    if (u && u.alter_ego && !authorEl.value) authorEl.value = u.alter_ego;
+  } catch {}
+  modal.classList.add('show');
+  setTimeout(() => (authorEl.value ? descEl : authorEl).focus(), 50);
+}
+function closeAdd() { modal.classList.remove('show'); }
+
+// blood spill origin follows cursor — same graphics as #back
+let addRaf;
+sendBtn.addEventListener('mousemove', (e) => {
+  if (addRaf) return;
+  addRaf = requestAnimationFrame(() => {
+    const r = sendBtn.getBoundingClientRect();
+    sendBtn.style.setProperty('--x', ((e.clientX - r.left) / r.width * 100) + '%');
+    sendBtn.style.setProperty('--y', ((e.clientY - r.top) / r.height * 100) + '%');
+    addRaf = null;
+  });
+}, { passive: true });
+
+document.getElementById('add-btn').addEventListener('click', openAdd);
+document.getElementById('add-cancel').addEventListener('click', closeAdd);
+modal.addEventListener('click', (e) => { if (e.target === modal) closeAdd(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAdd(); });
+
+function projectCard(p, i) {
+  const d = document.createElement('div');
+  d.className = 'card';
+  d.dataset.live = '';
+  const repoLabel = p.repo.replace(/^https?:\/\/(www\.)?github\.com\//i, '');
+  const statusClass = p.status.replace(/\s+/g, '-');
+  d.innerHTML = `<img class="photo" src="images/projects-bg.jpg" alt="${esc(p.author)}">
+      <div class="num">${String(i + 1).padStart(2, '0')}</div>
+      <h2>${esc(p.author)}</h2>
+      <p>${esc(p.description)}</p>
+      <div class="meta">
+        <span class="status ${statusClass}">${esc(p.status)}</span>
+        <a class="repo" href="${esc(p.repo)}" target="_blank" rel="noopener noreferrer">${esc(repoLabel)}</a>
+      </div>`;
+  return d;
+}
+async function loadProjects() {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/projects?select=author,status,description,repo,created_at&order=created_at.desc&limit=100`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    if (!r.ok) throw new Error(await r.text());
+    const list = await r.json();
+    grid.querySelectorAll('[data-live]').forEach((el) => el.remove());
+    const start = grid.children.length;
+    list.forEach((p, i) => grid.appendChild(projectCard(p, start + i)));
+  } catch (err) {
+    console.warn('projects load failed:', err.message);
+  }
+}
+sendBtn.addEventListener('click', async () => {
+  const author = authorEl.value.trim();
+  const status = statusEl.value;
+  const description = descEl.value.trim();
+  let repo = repoEl.value.trim();
+  if (!author || !status || !description || !repo) { errEl.textContent = 'All fields required.'; return; }
+  if (author.length > 40) { errEl.textContent = 'Author must be 40 chars or less.'; return; }
+  if (description.length > 140) { errEl.textContent = 'Description must be 140 chars or less.'; return; }
+  if (!/^https?:\/\//i.test(repo)) repo = 'https://' + repo;
+  try {
+    const u = new URL(repo);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error();
+  } catch { errEl.textContent = 'Enter a valid repo URL.'; return; }
+  sendBtn.disabled = true;
+  sendBtn.textContent = 'Sending...';
+  errEl.textContent = '';
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/projects`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ author, status, description, repo })
+    });
+    if (!r.ok) throw new Error(await r.text());
+    authorEl.value = ''; statusEl.value = ''; descEl.value = ''; repoEl.value = '';
+    closeAdd();
+    await loadProjects();
+  } catch (err) {
+    errEl.textContent = 'Failed: ' + err.message.slice(0, 200);
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Send';
+  }
+});
+loadProjects();
+</script>
 <script>
 document.getElementById('back').addEventListener('click', () => {
   window.location.href = 'strong_people.html#projects-banner';

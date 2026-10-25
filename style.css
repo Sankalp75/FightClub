@@ -48,8 +48,8 @@ body { font-family: 'Anton', sans-serif; }
 #back:hover::before { transform: translate(-50%, -50%) scale(1); }
 #back:hover { border-color: #c00000; color: #000; }
 
-/* ── Speak button — mirrors #back, pinned top-right ── */
-#speak {
+/* ── Speak/Add button — mirrors #back, pinned top-right ── */
+#speak, #add-btn {
   position: fixed;
   right: 3vw;
   top: 3vh;
@@ -68,7 +68,7 @@ body { font-family: 'Anton', sans-serif; }
   transform: translateZ(0);
   transition: border-color 0.35s ease;
 }
-#speak::before {
+#speak::before, #add-btn::before {
   content: "";
   position: absolute;
   width: 300%;
@@ -83,8 +83,8 @@ body { font-family: 'Anton', sans-serif; }
   will-change: transform;
   pointer-events: none;
 }
-#speak:hover::before { transform: translate(-50%, -50%) scale(1); }
-#speak:hover { border-color: #c00000; color: #000; }
+#speak:hover::before, #add-btn:hover::before { transform: translate(-50%, -50%) scale(1); }
+#speak:hover, #add-btn:hover { border-color: #c00000; color: #000; }
 
 /* ── Mobile gate ── */
 #mobile-block { display:none; position:fixed; inset:0; z-index:99999; align-items:center; justify-content:center; overflow:hidden; background:#050505; }

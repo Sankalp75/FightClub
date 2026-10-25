@@ -343,6 +343,8 @@ create table joins (
 );
 alter table joins enable row level security;
 create policy "allow anon insert" on joins for insert to anon with check (true);
+grant select, insert on public.joins to anon; -- table-level grant, RLS alone isn't enough (42501)
+grant usage on sequence public.joins_id_seq to anon; -- bigserial insert needs nextval
 -- extraction via Dashboard needs no extra policy; for API read, add:
 -- create policy "allow authenticated read" on joins for select to authenticated using (true);
 -- remember-me (contact + dialogue as credentials) needs anon exact-match lookup:

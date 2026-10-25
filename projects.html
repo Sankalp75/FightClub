@@ -52,6 +52,10 @@
     }
     #grid .card .num { margin-top: 1.6em; }
     #grid .card h2, #grid .card p { padding-left: 1.8em; padding-right: 1.8em; }
+    #grid .card .by {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: rgba(255,255,255,0.4); margin-bottom: 0.9em;
+    }
     #grid .card .meta {
       display: flex; justify-content: center; align-items: center; gap: 0.9em;
       margin-top: 1.2em; padding: 0 1.8em;
@@ -91,6 +95,8 @@
       <p class="sub">One line. One link. No fluff.</p>
       <label for="add-author">Author</label>
       <input id="add-author" type="text" maxlength="40" placeholder="Your name" autocomplete="off">
+      <label for="add-title">Project Title</label>
+      <input id="add-title" type="text" maxlength="60" placeholder="What are you building?" autocomplete="off">
       <label for="add-status">Status</label>
       <select id="add-status">
         <option value="" selected disabled>Select status</option>
@@ -115,11 +121,14 @@
 //   create table projects (
 //     id bigserial primary key,
 //     author text not null,
+//     title text not null,
 //     status text not null check (status in ('completed', 'in progress', 'locked')),
 //     description text not null,
 //     repo text not null,
 //     created_at timestamptz default now()
 //   );
+//   -- existing table from before the title column:
+//   alter table projects add column if not exists title text not null default '';
 //   alter table projects enable row level security;
 //   create policy "allow anon insert" on projects
 //     for insert to anon with check (true);
@@ -137,6 +146,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({
 const grid = document.getElementById('grid');
 const modal = document.getElementById('add-modal');
 const authorEl = document.getElementById('add-author');
+const titleEl = document.getElementById('add-title');
 const statusEl = document.getElementById('add-status');
 const descEl = document.getElementById('add-desc');
 const repoEl = document.getElementById('add-repo');
@@ -150,7 +160,7 @@ function openAdd() {
     if (u && u.alter_ego && !authorEl.value) authorEl.value = u.alter_ego;
   } catch {}
   modal.classList.add('show');
-  setTimeout(() => (authorEl.value ? descEl : authorEl).focus(), 50);
+  setTimeout(() => (authorEl.value ? titleEl : authorEl).focus(), 50);
 }
 function closeAdd() { modal.classList.remove('show'); }
 
@@ -177,9 +187,10 @@ function projectCard(p, i) {
   d.dataset.live = '';
   const repoLabel = p.repo.replace(/^https?:\/\/(www\.)?github\.com\//i, '');
   const statusClass = p.status.replace(/\s+/g, '-');
-  d.innerHTML = `<img class="photo" src="images/projects-bg.jpg" alt="${esc(p.author)}">
+  d.innerHTML = `<img class="photo" src="images/projects-bg.jpg" alt="${esc(p.title)}">
       <div class="num">${String(i + 1).padStart(2, '0')}</div>
-      <h2>${esc(p.author)}</h2>
+      <h2>${esc(p.title)}</h2>
+      <div class="by">By ${esc(p.author)}</div>
       <p>${esc(p.description)}</p>
       <div class="meta">
         <span class="status ${statusClass}">${esc(p.status)}</span>
@@ -190,7 +201,7 @@ function projectCard(p, i) {
 async function loadProjects() {
   try {
     const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/projects?select=author,status,description,repo,created_at&order=created_at.desc&limit=100`,
+      `${SUPABASE_URL}/rest/v1/projects?select=author,title,status,description,repo,created_at&order=created_at.desc&limit=100`,
       { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
     );
     if (!r.ok) throw new Error(await r.text());
@@ -204,11 +215,13 @@ async function loadProjects() {
 }
 sendBtn.addEventListener('click', async () => {
   const author = authorEl.value.trim();
+  const title = titleEl.value.trim();
   const status = statusEl.value;
   const description = descEl.value.trim();
   let repo = repoEl.value.trim();
-  if (!author || !status || !description || !repo) { errEl.textContent = 'All fields required.'; return; }
+  if (!author || !title || !status || !description || !repo) { errEl.textContent = 'All fields required.'; return; }
   if (author.length > 40) { errEl.textContent = 'Author must be 40 chars or less.'; return; }
+  if (title.length > 60) { errEl.textContent = 'Title must be 60 chars or less.'; return; }
   if (description.length > 140) { errEl.textContent = 'Description must be 140 chars or less.'; return; }
   if (!/^https?:\/\//i.test(repo)) repo = 'https://' + repo;
   try {
@@ -227,10 +240,10 @@ sendBtn.addEventListener('click', async () => {
         'Content-Type': 'application/json',
         Prefer: 'return=minimal'
       },
-      body: JSON.stringify({ author, status, description, repo })
+      body: JSON.stringify({ author, title, status, description, repo })
     });
     if (!r.ok) throw new Error(await r.text());
-    authorEl.value = ''; statusEl.value = ''; descEl.value = ''; repoEl.value = '';
+    authorEl.value = ''; titleEl.value = ''; statusEl.value = ''; descEl.value = ''; repoEl.value = '';
     closeAdd();
     await loadProjects();
   } catch (err) {
